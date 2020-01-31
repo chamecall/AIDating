@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Vozera</string>
+
+    <string name="error_dialog_text">Dialog error text</string>
+    <string name="scanning">scanning</string>
+    <string name="launch_btn_str">launch</string>
+
+</resources>

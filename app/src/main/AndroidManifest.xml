@@ -7,19 +7,20 @@
         android:icon="@mipmap/heart"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/heart"
-        android:theme="@style/AppTheme.NoActionBar">
+        android:theme="@style/FullScreen">
 
-        <activity android:name="org.corpitech.vozera.MainActivity">
+        <activity android:name="org.corpitech.vozera.MainActivity"
+            android:screenOrientation="landscape"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="org.corpitech.vozera.vision.FrameProcessingActivity"
-            android:configChanges="keyboardHidden|orientation"
+            android:name="org.corpitech.vozera.ScanActivity"
             android:label="@string/scanning"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="landscape" />
 
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"

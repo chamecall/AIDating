@@ -1,19 +1,21 @@
-package org.corpitech.vozera.vision;
+package org.corpitech.vozera;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.Rational;
 import android.util.Size;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.Toast;
-
-import org.corpitech.vozera.BaseModuleActivity;
-import org.corpitech.vozera.R;
-import org.corpitech.vozera.StatusBarUtils;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
@@ -25,7 +27,18 @@ import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
 import androidx.core.app.ActivityCompat;
 
-public abstract class AbstractCameraXActivity<R> extends BaseModuleActivity {
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.face.FirebaseVisionFace;
+
+import org.corpitech.vozera.gui.OverlayView;
+
+public class ScanActivity extends BaseModuleActivity {
+    private TextureView cameraView;
+    //private boolean mAnalyzeImageErrorState;
+    private OverlayView canvasView;
+    Processor processor;
+
+
     private static final int REQUEST_CODE_CAMERA_PERMISSION = 200,
             REQUEST_CODE_AUDIO_RECORD_PERMISSION = 300;
     private static final String[] PERMISSIONS = {Manifest.permission.CAMERA,
@@ -36,17 +49,22 @@ public abstract class AbstractCameraXActivity<R> extends BaseModuleActivity {
         return org.corpitech.vozera.R.layout.scanning;
     }
 
-    private TextureView cameraView;
+
 
     protected TextureView getCameraPreviewCameraView() {
         return findViewById(org.corpitech.vozera.R.id.previewArea);
     }
 
 
+    protected void frameAvailable() {
+        //canvasView.updateOverlay();
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        StatusBarUtils.setStatusBarOverlay(getWindow(), true);
+        //StatusBarUtils.setStatusBarOverlay(getWindow(), true);
         setContentView(getContentViewLayoutId());
         checkCameraPermission();
         checkAudioRecordPermission();
@@ -54,7 +72,14 @@ public abstract class AbstractCameraXActivity<R> extends BaseModuleActivity {
         this.cameraView = getCameraPreviewCameraView();
         cameraView.post(this::setupCameraX);
 
+
+        canvasView = findViewById(org.corpitech.vozera.R.id.canvasView);
+        canvasView.setFaceDetectionBound(findViewById(org.corpitech.vozera.R.id.face_detection_bound));
+
+        processor = new Processor(canvasView);
+
     }
+
 
     private void checkCameraPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -72,7 +97,6 @@ public abstract class AbstractCameraXActivity<R> extends BaseModuleActivity {
             ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE_AUDIO_RECORD_PERMISSION);
         }
     }
-
 
     @Override
     public void onRequestPermissionsResult(
@@ -131,10 +155,12 @@ public abstract class AbstractCameraXActivity<R> extends BaseModuleActivity {
         final Preview preview = new Preview(previewConfig);
 
         preview.setOnPreviewOutputUpdateListener(output -> {
+
             ViewGroup parent = (ViewGroup) cameraView.getParent();
             parent.removeView(cameraView);
             parent.addView(cameraView, 0);
             SurfaceTexture surfaceTexture = output.getSurfaceTexture();
+            setPreviewTransform(output);
 
             cameraView.setSurfaceTexture(surfaceTexture);
 
@@ -159,26 +185,90 @@ public abstract class AbstractCameraXActivity<R> extends BaseModuleActivity {
                     frameAvailable();
                 }
             });
+
         });
-
-
-
-
-
 
 
         final ImageAnalysis imageAnalysis = new ImageAnalysis(analysisConfig);
         imageAnalysis.setAnalyzer(this::handleImage);
         CameraX.bindToLifecycle(this, preview, imageAnalysis);
 
+    }
+
+    public void handleImage(ImageProxy imageProxy, int rotationDegrees) {
+        if (imageProxy == null || imageProxy.getImage() == null) {
+            return;
+        }
+
+        processor.handleImage(imageProxy, rotationDegrees);
+
+//        catch (Exception e) {
+//                    Log.e(Constants.TAG, "Error during FBImage analysis", e);
+//                    mAnalyzeImageErrorState = true;
+//                    runOnUiThread(() -> {
+//                        if (!isFinishing()) {
+//                            showErrorDialog(v -> finish());
+//                        }
+//                    });
+//                }
 
     }
 
-    protected abstract void frameAvailable();
+    private void setPreviewTransform(Preview.PreviewOutput output) {
+        Matrix matrix = new Matrix();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        cameraView.getDisplay().getRealMetrics(displayMetrics);
 
-    @WorkerThread
-    @Nullable
-    protected abstract void handleImage(ImageProxy image, int rotationDegrees);
+        float centerX = cameraView.getWidth() / 2.0f;
+        float centerY = cameraView.getHeight() / 2.0f;
+        int angle = getDisplaySurfaceRotation(cameraView.getDisplay().getRotation());
+        matrix.postRotate(-angle, centerX, centerY);
 
+        float bufferRatio = (float) output.getTextureSize().getHeight() / output.getTextureSize().getWidth();
+
+        int scaledWidth, scaledHeight;
+
+        if (cameraView.getWidth() > cameraView.getHeight()) {
+            scaledHeight = cameraView.getWidth();
+            scaledWidth = Math.round(cameraView.getWidth() * bufferRatio);
+        } else {
+            scaledHeight = cameraView.getHeight();
+            scaledWidth = Math.round(cameraView.getHeight() * bufferRatio);
+        }
+
+        float xScale = (float) scaledWidth / cameraView.getWidth();
+        float yScale = (float) scaledHeight / cameraView.getHeight();
+
+        matrix.preScale(xScale, yScale, centerX, centerY);
+        cameraView.setTransform(matrix);
+    }
+
+    private int getDisplaySurfaceRotation(int rotation) {
+        int angle = 0;
+        switch (rotation) {
+            case Surface.ROTATION_90:
+                angle = 90;
+                break;
+
+            case Surface.ROTATION_180:
+                angle = 180;
+                break;
+
+            case Surface.ROTATION_270:
+                angle = 270;
+                break;
+        }
+        return angle;
+    }
+
+
+    @Override
+    protected void onDestroy() {
+
+        super.onDestroy();
+        if (processor != null) {
+            processor.destroy();
+        }
+    }
 
 }

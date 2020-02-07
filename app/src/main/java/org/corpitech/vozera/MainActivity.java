@@ -5,7 +5,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.corpitech.vozera.vision.FrameProcessingActivity;
+import static android.graphics.BitmapFactory.decodeResource;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -14,11 +14,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_menu);
+
+
         findViewById(R.id.launch_btn).setOnClickListener(v -> {
-            final Intent intent = new Intent(MainActivity.this, FrameProcessingActivity.class);
+            final Intent intent = new Intent(MainActivity.this, ScanActivity.class);
             startActivity(intent);
         });
     }
+
 
 
 }

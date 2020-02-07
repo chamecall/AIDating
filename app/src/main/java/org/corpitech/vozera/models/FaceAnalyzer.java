@@ -48,7 +48,7 @@ public class FaceAnalyzer {
 
 
 
-    public List<FirebaseVisionFace> analyze(FirebaseVisionImage FBImage) {
+    public FirebaseVisionFace analyze(FirebaseVisionImage FBImage) {
 
 
         if (handlerExecutor == null) {
@@ -57,16 +57,19 @@ public class FaceAnalyzer {
 
         FirebaseVisionFaceDetector faceDetector = FirebaseVision.getInstance().getVisionFaceDetector(options);
 
-        List<FirebaseVisionFace> result = null;
+        FirebaseVisionFace result = null;
 
         Task<List<FirebaseVisionFace>> task = faceDetector.detectInImage(FBImage);
         try {
-            result = Tasks.await(task);
+            List<FirebaseVisionFace> results = Tasks.await(task);
+            if (!results.isEmpty()) {
+                result = results.get(0);
+            }
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
-        return result;
 
+        return result;
     }
 
 

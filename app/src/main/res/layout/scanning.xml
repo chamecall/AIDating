@@ -14,23 +14,24 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"  />
 
-    <org.corpitech.vozera.vision.OverlayView
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/face_detection_bound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@raw/va"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:adjustViewBounds="true"
+        />
+
+    <org.corpitech.vozera.gui.OverlayView
         android:id="@+id/canvasView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="wrap_content"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@null"
-        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:title="@string/scanning" />
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

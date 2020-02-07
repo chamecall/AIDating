@@ -12,9 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import org.corpitech.vozera.R;
 
 public class BaseModuleActivity extends AppCompatActivity {
 
@@ -25,17 +23,12 @@ public class BaseModuleActivity extends AppCompatActivity {
   @Override
   protected void onPostCreate(@Nullable Bundle savedInstanceState) {
     super.onPostCreate(savedInstanceState);
-    final Toolbar toolbar = findViewById(R.id.toolbar);
-    if (toolbar != null) {
-      setSupportActionBar(toolbar);
-    }
     startBackgroundThread();
   }
 
   protected void startBackgroundThread() {
     mBackgroundThread = new HandlerThread("ModuleActivity");
     mBackgroundThread.start();
-    mBackgroundThread.setPriority(Thread.MIN_PRIORITY);
     mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
 
 

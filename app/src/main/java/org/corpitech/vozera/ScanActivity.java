@@ -2,14 +2,10 @@ package org.corpitech.vozera;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.media.Image;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.Rational;
 import android.util.Size;
 import android.view.Surface;
@@ -17,8 +13,6 @@ import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 import androidx.camera.core.CameraX;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageAnalysisConfig;
@@ -26,9 +20,6 @@ import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
 import androidx.core.app.ActivityCompat;
-
-import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 
 import org.corpitech.vozera.gui.OverlayView;
 
@@ -45,17 +36,6 @@ public class ScanActivity extends BaseModuleActivity {
             Manifest.permission.RECORD_AUDIO};
 
 
-    protected int getContentViewLayoutId() {
-        return org.corpitech.vozera.R.layout.scanning;
-    }
-
-
-
-    protected TextureView getCameraPreviewCameraView() {
-        return findViewById(org.corpitech.vozera.R.id.previewArea);
-    }
-
-
     protected void frameAvailable() {
         //canvasView.updateOverlay();
     }
@@ -65,18 +45,17 @@ public class ScanActivity extends BaseModuleActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //StatusBarUtils.setStatusBarOverlay(getWindow(), true);
-        setContentView(getContentViewLayoutId());
+        setContentView(org.corpitech.vozera.R.layout.scanning);
         checkCameraPermission();
         checkAudioRecordPermission();
-
-        this.cameraView = getCameraPreviewCameraView();
-        cameraView.post(this::setupCameraX);
 
 
         canvasView = findViewById(org.corpitech.vozera.R.id.canvasView);
         canvasView.setFaceDetectionBound(findViewById(org.corpitech.vozera.R.id.face_detection_bound));
 
-        processor = new Processor(canvasView);
+        processor = new Processor(canvasView, this);
+        this.cameraView = findViewById(org.corpitech.vozera.R.id.previewArea);
+        cameraView.post(this::setupCameraX);
 
     }
 
@@ -141,16 +120,15 @@ public class ScanActivity extends BaseModuleActivity {
 
         CameraX.unbindAll();
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        cameraView.getDisplay().getRealMetrics(displayMetrics);
-        Size imageAnalysisSize = new Size(480, 360);
-        Size screenSize = new Size(displayMetrics.widthPixels, displayMetrics.heightPixels);
-        Rational aspectRatio = new Rational(displayMetrics.widthPixels, displayMetrics.heightPixels);
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//        cameraView.getDisplay().getRealMetrics(displayMetrics);
+        Size previewSize = new Size(cameraView.getWidth(), cameraView.getHeight());
+        Rational aspectRatio = new Rational(cameraView.getWidth(), cameraView.getHeight());
         int rotation = cameraView.getDisplay().getRotation();
 
         CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
-        final PreviewConfig previewConfig = createPreviewConfig(screenSize, aspectRatio, rotation, lensFacing);
-        final ImageAnalysisConfig analysisConfig = createAnalysisConfig(imageAnalysisSize, aspectRatio, rotation, lensFacing);
+        final PreviewConfig previewConfig = createPreviewConfig(previewSize, aspectRatio, rotation, lensFacing);
+        final ImageAnalysisConfig analysisConfig = createAnalysisConfig(previewSize, aspectRatio, rotation, lensFacing);
 
         final Preview preview = new Preview(previewConfig);
 
@@ -160,7 +138,10 @@ public class ScanActivity extends BaseModuleActivity {
             parent.removeView(cameraView);
             parent.addView(cameraView, 0);
             SurfaceTexture surfaceTexture = output.getSurfaceTexture();
+
             setPreviewTransform(output);
+            // to calc sizes ratio between bitmaps and overlay view
+            canvasView.adjustRatio(output.getTextureSize());
 
             cameraView.setSurfaceTexture(surfaceTexture);
 
@@ -192,6 +173,8 @@ public class ScanActivity extends BaseModuleActivity {
         final ImageAnalysis imageAnalysis = new ImageAnalysis(analysisConfig);
         imageAnalysis.setAnalyzer(this::handleImage);
         CameraX.bindToLifecycle(this, preview, imageAnalysis);
+
+
 
     }
 

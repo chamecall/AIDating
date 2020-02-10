@@ -19,7 +19,6 @@ public class EmotionRecognizer {
 
     public EmotionRecognizer(Context context) {
         final String moduleFileAbsoluteFilePath = new File(Utils.assetFilePath(context, "model.pt")).getPath();
-        System.out.println(moduleFileAbsoluteFilePath);
         mModule = Module.load(moduleFileAbsoluteFilePath);
 
     }

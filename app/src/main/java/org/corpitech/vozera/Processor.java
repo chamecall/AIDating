@@ -64,12 +64,21 @@ class Processor {
                 float curFraction = valueAnimator.getAnimatedFraction();
                 float [] curChatterValues = new float[METRICS_NUM];
                 float [] curUserValues = new float[METRICS_NUM];
+
+                float totalUserScore = 0.0f, totalChatterScore = 0.0f;
                 for (int i = 0; i < METRICS_NUM; i++) {
                     curChatterValues[i] = chatter.getMetrics()[i] + chatterMetricsDiffs[i] * curFraction;
                     curUserValues[i] = user.getMetrics()[i] + userMetricsDiffs[i] * curFraction;
+                    totalChatterScore += curChatterValues[i];
+                    totalUserScore += curUserValues[i];
                 }
+                totalChatterScore = totalChatterScore / 4 * 10000;
+                totalUserScore = totalUserScore / 4 * 10000;
+
                 canvasView.setTLPanel(topPanel.generatePanel(curChatterValues));
                 canvasView.setTRPanel(topPanel.generatePanel(curUserValues));
+                canvasView.setBLPanel(bottomPanel.generateChatterPanel(null, (int)totalChatterScore));
+                canvasView.setBRPanel(bottomPanel.generateUserPhoto(null, (int)totalUserScore));
 
                 canvasView.post(() -> canvasView.invalidate());
             });
@@ -103,8 +112,8 @@ class Processor {
         canvasView = overlayView;
         canvasView.setTLPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));
         canvasView.setTRPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));
-        canvasView.setBlPanel(bottomPanel.generatePanel(null));
-        canvasView.setBrPanel(bottomPanel.generatePanel(null));
+        canvasView.setBLPanel(bottomPanel.generateChatterPanel(null, 0));
+        canvasView.setBRPanel(bottomPanel.generateUserPhoto(null, 0));
 
         canvasView.setBrainGifPositions(bottomPanel.getGifCell());
 
@@ -152,13 +161,14 @@ class Processor {
 
             if (!chatter.isDetected()) {
                 chatter.setDetected(true);
-                canvasView.startFaceBoundAnimation(chatter.getFaceBox());
-                canvasView.setBlPanel(bottomPanel.generatePanel(faceBitmap));
+                canvasView.startFaceDetectionAnimation(chatter.getFaceBox());
+                canvasView.setBLPanel(bottomPanel.generateChatterPanel(faceBitmap, 0));
                 canvasView.post(() -> canvasView.invalidate());
             }
 
         } else {
             chatter.setDetected(false);
+            canvasView.stopFaceDetectionAnimation();
         }
 
 

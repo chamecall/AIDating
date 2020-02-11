@@ -35,6 +35,9 @@ public class TopPanel {
     public TopPanel(Context context) {
         this.context = context;
         panelBitmap = decodeResource(context.getResources(), R.raw.top_panel);
+        float scaleFactor = 0.7f;
+        panelBitmap = Bitmap.createScaledBitmap(panelBitmap, (int)(panelBitmap.getWidth() * scaleFactor),
+                (int)(panelBitmap.getHeight() * scaleFactor), false);
         panelBitmap = panelBitmap.copy(panelBitmap.getConfig(), true);
         //circleRadius = (int) (panelBitmap.getHeight() * 0.4 / 2);
         cellWidth = (panelBitmap.getWidth() - LEFT_PADDING) / 4;
@@ -47,7 +50,7 @@ public class TopPanel {
         iconWidth = cellWidth - circleRadius * 2;
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setTextSize(16 * context.getResources().getDisplayMetrics().density);
+        paint.setTextSize(10 * context.getResources().getDisplayMetrics().density);
         paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         paint.setStrokeWidth(15.0f);
 

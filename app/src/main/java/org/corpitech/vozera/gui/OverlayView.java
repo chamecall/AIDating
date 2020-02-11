@@ -58,7 +58,7 @@ public class OverlayView extends View {
         this.trPanel = trPanel;
     }
 
-    public void setBlPanel(Bitmap blPanel) {
+    public void setBLPanel(Bitmap blPanel) {
         this.blPanel = blPanel;
     }
 
@@ -88,11 +88,11 @@ public class OverlayView extends View {
 
 
 
-    public void setBrPanel(Bitmap brPanel) {
+    public void setBRPanel(Bitmap brPanel) {
         this.brPanel = brPanel;
     }
 
-    public void startFaceBoundAnimation(Rect faceBox) {
+    public void startFaceDetectionAnimation(Rect faceBox) {
 
         if (faceBox != null) {
             if (faceDetectionGif.getVisibility() == GONE) {
@@ -103,6 +103,10 @@ public class OverlayView extends View {
             }
         }
 
+    }
+
+    public void stopFaceDetectionAnimation() {
+        this.post(() -> faceDetectionGif.setVisibility(GONE));
     }
 
     private void updateFaceDetectionGif(Rect faceBox) {

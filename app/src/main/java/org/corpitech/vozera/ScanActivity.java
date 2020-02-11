@@ -51,7 +51,9 @@ public class ScanActivity extends BaseModuleActivity {
 
 
         canvasView = findViewById(org.corpitech.vozera.R.id.canvasView);
-        canvasView.setFaceDetectionBound(findViewById(org.corpitech.vozera.R.id.face_detection_bound));
+        canvasView.setFaceDetectionGif(findViewById(org.corpitech.vozera.R.id.face_detection_bound));
+        canvasView.setlBrainGif(findViewById(R.id.l_brain_animation));
+        canvasView.setrBrainGif(findViewById(R.id.r_brain_animation));
 
         processor = new Processor(canvasView, this);
         this.cameraView = findViewById(org.corpitech.vozera.R.id.previewArea);

@@ -75,6 +75,7 @@ public class TopPanel {
         for (int i = 0; i < 4; i++) {
             Bitmap icon = decodeResource(context.getResources(), icons[i]);
             Rational aspectRatio = new Rational(icon.getWidth(), icon.getHeight());
+
             int iconHeight = (int)(iconWidth / aspectRatio.floatValue());
             icon = Bitmap.createScaledBitmap(icon, iconWidth, iconHeight, false);
 

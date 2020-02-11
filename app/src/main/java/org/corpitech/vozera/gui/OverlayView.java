@@ -11,15 +11,24 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import org.corpitech.vozera.R;
-
 import pl.droidsonroids.gif.GifImageView;
 
 public class OverlayView extends View {
     private Paint paint;
     private float xRatio, yRatio;
-    GifImageView faceDetectionBound;
-    private Bitmap tlPanel, trPanel;
+    GifImageView faceDetectionGif;
+    private Bitmap tlPanel, trPanel, blPanel, brPanel;
+    private final int TOP_PANEL_MARGIN = 5, LR_PANEL_MARGIN = 10, VERTICAL_MARGIN_BTW_PANELS = 5;
+    private GifImageView lBrainGif, rBrainGif;
+
+    public void setlBrainGif(GifImageView lBrainGif) {
+        this.lBrainGif = lBrainGif;
+    }
+
+    public void setrBrainGif(GifImageView rBrainGif) {
+        this.rBrainGif = rBrainGif;
+    }
+
 
     public void adjustRatio(Size previewSize) {
         this.xRatio = 1.0f * this.getWidth() / previewSize.getWidth();
@@ -33,9 +42,13 @@ public class OverlayView extends View {
 
     }
 
-    public void setFaceDetectionBound(GifImageView gifImageView) {
-        this.faceDetectionBound = gifImageView;
+    public void setFaceDetectionGif(GifImageView gifImageView) {
+        this.faceDetectionGif = gifImageView;
     }
+
+
+
+
 
     public void setTLPanel(Bitmap tlPanel) {
         this.tlPanel = tlPanel;
@@ -45,44 +58,89 @@ public class OverlayView extends View {
         this.trPanel = trPanel;
     }
 
+    public void setBlPanel(Bitmap blPanel) {
+        this.blPanel = blPanel;
+    }
+
+    public void setBrainGifPositions(Rect brainGifRect) {
+        if (lBrainGif != null &&  rBrainGif != null) {
+
+            lBrainGif.setVisibility(INVISIBLE);
+            rBrainGif.setVisibility(INVISIBLE);
+            setGifSize(lBrainGif, brainGifRect.width(), brainGifRect.height());
+            setGifSize(rBrainGif, brainGifRect.width(), brainGifRect.height());
+
+            this.post(() -> {
+                lBrainGif.setX(LR_PANEL_MARGIN + blPanel.getWidth() - brainGifRect.width());
+                lBrainGif.setY(TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
+                        ((blPanel.getHeight() - lBrainGif.getHeight()) >> 1));
+                rBrainGif.setY(TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
+                        ((brPanel.getHeight() - rBrainGif.getHeight()) >> 1));
+                // we setX position in post cause before that we don't know width of the View
+                // and we calculate that after xml inflating
+                rBrainGif.setX(getWidth() - LR_PANEL_MARGIN - brainGifRect.width());
+                lBrainGif.setVisibility(VISIBLE);
+                rBrainGif.setVisibility(VISIBLE);
+            });
+
+        }
+    }
+
+
+
+    public void setBrPanel(Bitmap brPanel) {
+        this.brPanel = brPanel;
+    }
+
     public void startFaceBoundAnimation(Rect faceBox) {
 
         if (faceBox != null) {
-            if (faceDetectionBound.getVisibility() == GONE) {
-                this.post(() -> faceDetectionBound.setVisibility(VISIBLE));
-                Runnable runnable = () -> this.faceDetectionBound.setVisibility(GONE);
+            if (faceDetectionGif.getVisibility() == GONE) {
+                updateFaceDetectionGif(faceBox);
+                this.post(() -> faceDetectionGif.setVisibility(VISIBLE));
+                Runnable runnable = () -> this.faceDetectionGif.setVisibility(GONE);
                 this.postDelayed(runnable, 2000);
             }
         }
 
     }
 
+    private void updateFaceDetectionGif(Rect faceBox) {
+        Rect scaledFaceBox = scaleBox(faceBox);
+        int diameter = (int) Math.sqrt(Math.pow(scaledFaceBox.height(), 2) + Math.pow(scaledFaceBox.width(), 2));
+        float circleLeft = scaledFaceBox.left - (diameter - scaledFaceBox.width()) / 2.0f;
+        float circleTop = scaledFaceBox.top - (diameter - scaledFaceBox.height()) / 2.0f;
+        setGifSize(faceDetectionGif, diameter, diameter);
+        this.post(() -> {
+            faceDetectionGif.setX(circleLeft);
+            faceDetectionGif.setY(circleTop);
+        });
+
+    }
+
 
     public void updateFaceBox(Rect faceBox) {
-        if (faceDetectionBound.getVisibility() == VISIBLE) {
-            Rect scaledFaceBox = scaleBox(faceBox);
-            int diameter = (int) Math.sqrt(Math.pow(scaledFaceBox.height(), 2) + Math.pow(scaledFaceBox.width(), 2));
-            float circleLeft = scaledFaceBox.left - (diameter - scaledFaceBox.width()) / 2.0f;
-            float circleTop = scaledFaceBox.top - (diameter - scaledFaceBox.height()) / 2.0f;
-
-            this.post(() -> {
-                faceDetectionBound.setMaxWidth(diameter);
-                faceDetectionBound.setMinimumWidth(diameter);
-                faceDetectionBound.setMaxHeight(diameter);
-                faceDetectionBound.setMaxWidth(diameter);
-                faceDetectionBound.setX(circleLeft);
-                faceDetectionBound.setY(circleTop);
-            });
+        if (faceDetectionGif.getVisibility() == VISIBLE) {
+            updateFaceDetectionGif(faceBox);
         }
 
+    }
+
+    private void setGifSize(GifImageView gif, int width, int height) {
+        gif.setMaxWidth(width);
+        gif.setMaxHeight(height);
     }
 
 
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawBitmap(tlPanel, 10, 5, paint);
-        canvas.drawBitmap(trPanel, getWidth() - trPanel.getWidth() - 10, 5, paint);
+        canvas.drawBitmap(tlPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN, paint);
+        canvas.drawBitmap(trPanel, getWidth() - trPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN, paint);
+
+        canvas.drawBitmap(blPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+        canvas.drawBitmap(brPanel, getWidth() - brPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+
     }
 
     private Rect scaleBox(Rect box) {

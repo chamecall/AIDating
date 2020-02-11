@@ -15,6 +15,7 @@ import androidx.camera.core.ImageProxy;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 
+import org.corpitech.vozera.gui.BottomPanel;
 import org.corpitech.vozera.gui.OverlayView;
 import org.corpitech.vozera.gui.TopPanel;
 import org.corpitech.vozera.models.BeautyDefiner;
@@ -27,6 +28,9 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+
+import static org.corpitech.vozera.Utils.getMaxInArrays;
+import static org.corpitech.vozera.Utils.subtractArrays;
 
 
 class Processor {
@@ -42,14 +46,15 @@ class Processor {
     private OverlayView canvasView;
     private Context context;
     private TopPanel topPanel;
+    private BottomPanel bottomPanel;
     private Random random;
     private final int METRICS_NUM = 4;
 
-    private Runnable timerRunnable = new Runnable() {
+    private Runnable topPanelAnimation = new Runnable() {
         @Override
         public void run() {
 
-            float [] newChatterMetrics = generateRandomNums(), newUserMetrics = generateRandomNums();
+            float [] newChatterMetrics = generateRandomFloats(), newUserMetrics = generateRandomFloats();
             float [] chatterMetricsDiffs = subtractArrays(newChatterMetrics, chatter.getMetrics());
             float [] userMetricsDiffs = subtractArrays(newUserMetrics, user.getMetrics());
             float maxValue = getMaxInArrays(chatterMetricsDiffs, userMetricsDiffs);
@@ -60,7 +65,6 @@ class Processor {
                 float [] curChatterValues = new float[METRICS_NUM];
                 float [] curUserValues = new float[METRICS_NUM];
                 for (int i = 0; i < METRICS_NUM; i++) {
-                    System.out.println(chatter.getMetrics()[i] + " " + chatterMetricsDiffs[i] + " " + curFraction);
                     curChatterValues[i] = chatter.getMetrics()[i] + chatterMetricsDiffs[i] * curFraction;
                     curUserValues[i] = user.getMetrics()[i] + userMetricsDiffs[i] * curFraction;
                 }
@@ -89,45 +93,21 @@ class Processor {
         }
     };
 
-
-    private float getMaxInArrays(float[]... arrays) {
-        float max = getMaxInArray(arrays[0]);
-        for (int i = 1; i < arrays.length; i++) {
-            float curArrMax = getMaxInArray(arrays[i]);
-            if (curArrMax > max) {
-                max = curArrMax;
-            }
-        }
-        return max;
-    }
-
-    private float getMaxInArray(float [] array) {
-        float max = array[0];
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] > max) {
-                max = array[i];
-            }
-        }
-        return max;
-    }
-
-    private float [] subtractArrays(float [] fArr, float [] sArr) {
-        float [] diffArr = new float[4];
-        for (int i = 0; i < fArr.length; i++) {
-            diffArr[i] = fArr[i] - sArr[i];
-        }
-        return diffArr;
-    }
-
     private Handler timerHandler = new Handler();
 
     public Processor(OverlayView overlayView, Context context) {
         random = new Random();
         topPanel = new TopPanel(context);
+        bottomPanel = new BottomPanel(context);
 
         canvasView = overlayView;
         canvasView.setTLPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));
         canvasView.setTRPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));
+        canvasView.setBlPanel(bottomPanel.generatePanel(null));
+        canvasView.setBrPanel(bottomPanel.generatePanel(null));
+
+        canvasView.setBrainGifPositions(bottomPanel.getGifCell());
+
         //beautyDefiner = new BeautyDefiner(this);
 
         //emotionRecognizer = new EmotionRecognizer(this);
@@ -135,16 +115,12 @@ class Processor {
         user = new User();
         faceAnalyzer = new FaceAnalyzer();
 
-
-        timerHandler.postDelayed(timerRunnable, 5000);
-
-
-
+        timerHandler.postDelayed(topPanelAnimation, 5000);
 
     }
 
 
-    private float[] generateRandomNums() {
+    private float[] generateRandomFloats() {
         float[] rArr = new float[4];
         for (int i = 0; i < 4; i++) {
             rArr[i] = random.nextFloat() - 0.01f;
@@ -161,7 +137,6 @@ class Processor {
         Bitmap bitmap = FBImage.getBitmap();
         FirebaseVisionFace face = faceAnalyzer.analyze(FBImage);
 
-        Size bitmapSize = new Size(bitmap.getWidth(), bitmap.getHeight());
 
         if (face != null) {
             Rect box = Utils.adjustRectByBitmapSize(face.getBoundingBox(), new Size(bitmap.getWidth(), bitmap.getHeight()));
@@ -173,11 +148,13 @@ class Processor {
 
             chatter.setFaceBox(box);
             canvasView.updateFaceBox(chatter.getFaceBox());
-            canvasView.setTLPanel(topPanel.generatePanel(generateRandomNums()));
+            canvasView.setTLPanel(topPanel.generatePanel(generateRandomFloats()));
 
             if (!chatter.isDetected()) {
                 chatter.setDetected(true);
                 canvasView.startFaceBoundAnimation(chatter.getFaceBox());
+                canvasView.setBlPanel(bottomPanel.generatePanel(faceBitmap));
+                canvasView.post(() -> canvasView.invalidate());
             }
 
         } else {
@@ -219,7 +196,7 @@ class Processor {
         }
 
         if (timerHandler != null) {
-            timerHandler.removeCallbacks(timerRunnable);
+            timerHandler.removeCallbacks(topPanelAnimation);
         }
     }
 }

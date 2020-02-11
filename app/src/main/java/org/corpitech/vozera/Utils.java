@@ -98,5 +98,43 @@ public class Utils {
         return rects;
     }
 
+    public static void debug(Object... objects) {
+        StringBuilder string = new StringBuilder();
+        for (Object object : objects) {
+            string.append(object.toString()).append(" : ");
+        }
+        Log.d("LogCat", string.toString());
+    }
+
+    public static float getMaxInArrays(float[]... arrays) {
+        float max = getMaxInArray(arrays[0]);
+        for (int i = 1; i < arrays.length; i++) {
+            float curArrMax = getMaxInArray(arrays[i]);
+            if (curArrMax > max) {
+                max = curArrMax;
+            }
+        }
+        return max;
+    }
+
+    public static float getMaxInArray(float [] array) {
+        float max = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+            }
+        }
+        return max;
+    }
+
+    public static float [] subtractArrays(float [] fArr, float [] sArr) {
+        float [] diffArr = new float[4];
+        for (int i = 0; i < fArr.length; i++) {
+            diffArr[i] = fArr[i] - sArr[i];
+        }
+        return diffArr;
+    }
+
+
 
 }

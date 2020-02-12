@@ -17,6 +17,7 @@ import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 
 import org.corpitech.vozera.gui.BottomPanel;
 import org.corpitech.vozera.gui.OverlayView;
+import org.corpitech.vozera.gui.PanelsView;
 import org.corpitech.vozera.gui.TopPanel;
 import org.corpitech.vozera.models.BeautyDefiner;
 import org.corpitech.vozera.models.EmotionRecognizer;
@@ -44,6 +45,7 @@ class Processor {
     private FutureTask emotionRecognitionTask;
     private FutureTask beautyRecognitionTask;
     private OverlayView canvasView;
+    private PanelsView panelsView;
     private Context context;
     private TopPanel topPanel;
     private BottomPanel bottomPanel;
@@ -72,8 +74,8 @@ class Processor {
                     totalChatterScore += curChatterValues[i];
                     totalUserScore += curUserValues[i];
                 }
-                totalChatterScore = totalChatterScore / 4 * 10000;
-                totalUserScore = totalUserScore / 4 * 10000;
+                totalChatterScore = totalChatterScore / 4 * 1000;
+                totalUserScore = totalUserScore / 4 * 1000;
 
                 canvasView.setTLPanel(topPanel.generatePanel(curChatterValues));
                 canvasView.setTRPanel(topPanel.generatePanel(curUserValues));
@@ -104,10 +106,15 @@ class Processor {
 
     private Handler timerHandler = new Handler();
 
-    public Processor(OverlayView overlayView, Context context) {
+    public Processor(PanelsView _panelsView, OverlayView overlayView, Context context) {
         random = new Random();
         topPanel = new TopPanel(context);
         bottomPanel = new BottomPanel(context);
+
+        panelsView = _panelsView;
+        panelsView.setBottomPanel(bottomPanel.getPanelBitmap());
+        panelsView.setTlPanelHeight(topPanel.getPanelBitmap().getHeight());
+
 
         canvasView = overlayView;
         canvasView.setTLPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));

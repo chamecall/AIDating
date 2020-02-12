@@ -1,11 +1,15 @@
 package org.corpitech.vozera.gui;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import org.corpitech.vozera.R;
 
@@ -14,11 +18,12 @@ import static android.graphics.BitmapFactory.decodeResource;
 public class BottomPanel {
 
 
-    private Paint paint;
+    private Paint paint, textBorderPaint;
     private Bitmap panelBitmap;
     private float [] cellsWidths = {0.33f, 0.33f, 0.33f};
     private Rect photoCell, nameAgeCell, emotionCell, gifCell;
     private Bitmap prevChatterPhoto, prevUserPhoto;
+    private int TEXT_SIZE = 25;
 
     public BottomPanel(Context context) {
         panelBitmap = decodeResource(context.getResources(), R.raw.bottom_panel);
@@ -31,9 +36,28 @@ public class BottomPanel {
 
         calcCellsSizes();
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setTextSize(17 * context.getResources().getDisplayMetrics().density);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        paint.setTextSize(TEXT_SIZE * context.getResources().getDisplayMetrics().density);
+        paint.setColor(Color.WHITE);
+        //paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
+
+        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/Helvetica.ttf");
+        Typeface bold = Typeface.create(plain, Typeface.BOLD);
+
+        paint.setTypeface(bold);
+
+//        textBorderPaint = new Paint();
+//        textBorderPaint.setStyle(Paint.Style.STROKE);
+//        textBorderPaint.setTextSize(TEXT_SIZE * context.getResources().getDisplayMetrics().density);
+//        textBorderPaint.setTypeface(bold);
+
+//        textBorderPaint.setStrokeWidth(2);
+//        textBorderPaint.setColor(Color.LTGRAY);
+
+    }
+
+    public Bitmap getPanelBitmap() {
+        return panelBitmap;
     }
 
     private void calcCellsSizes() {
@@ -70,10 +94,9 @@ public class BottomPanel {
 
     public Bitmap generatePanel(Bitmap face, int totalScore) {
 
-        Bitmap panelBitmapCopy = panelBitmap.copy(panelBitmap.getConfig(), true);
+       // Bitmap panelBitmapCopy = panelBitmap.copy(panelBitmap.getConfig(), true);
+        Bitmap panelBitmapCopy = Bitmap.createBitmap(panelBitmap.getWidth(), panelBitmap.getHeight(), panelBitmap.getConfig() );
         Canvas canvas = new Canvas(panelBitmapCopy);
-
-
 
         if (face != null) {
             Bitmap scaledPhoto = Bitmap.createScaledBitmap(face, photoCell.width(), photoCell.height(), false);
@@ -85,7 +108,7 @@ public class BottomPanel {
 
         paint.getTextBounds(score, 0, score.length(), textRect);
         canvas.drawText(score, gifCell.centerX() - textRect.width() / 2, gifCell.centerY() + textRect.height() / 2, paint);
-
+        //canvas.drawText(score, gifCell.centerX() - textRect.width() / 2, gifCell.centerY() + textRect.height() / 2, textBorderPaint);
         return panelBitmapCopy;
     }
 }

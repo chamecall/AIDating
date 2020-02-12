@@ -7,18 +7,31 @@
     android:fitsSystemWindows="true">
 
 
+
+
     <TextureView
         android:id="@+id/previewArea"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
+
         app:layout_constraintTop_toTopOf="parent"  />
+
+    <org.corpitech.vozera.gui.PanelsView
+        android:id="@+id/panels_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+
 
     <pl.droidsonroids.gif.GifImageView
         android:id="@+id/l_brain_animation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@raw/brain"
+        android:src="@raw/new_brain"
         android:visibility="gone"
 
         app:layout_constraintTop_toTopOf="parent"
@@ -30,7 +43,9 @@
         android:id="@+id/r_brain_animation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@raw/brain"
+        android:src="@raw/new_brain"
+
+
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -52,6 +67,7 @@
         android:id="@+id/canvasView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         />

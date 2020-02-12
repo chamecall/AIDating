@@ -2,8 +2,11 @@ package org.corpitech.vozera.gui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BlendMode;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Size;
@@ -13,12 +16,15 @@ import androidx.annotation.Nullable;
 
 import pl.droidsonroids.gif.GifImageView;
 
+import static org.corpitech.vozera.gui.PanelsView.LR_PANEL_MARGIN;
+import static org.corpitech.vozera.gui.PanelsView.TOP_PANEL_MARGIN;
+import static org.corpitech.vozera.gui.PanelsView.VERTICAL_MARGIN_BTW_PANELS;
+
 public class OverlayView extends View {
     private Paint paint;
     private float xRatio, yRatio;
     GifImageView faceDetectionGif;
     private Bitmap tlPanel, trPanel, blPanel, brPanel;
-    private final int TOP_PANEL_MARGIN = 5, LR_PANEL_MARGIN = 10, VERTICAL_MARGIN_BTW_PANELS = 5;
     private GifImageView lBrainGif, rBrainGif;
 
     public void setlBrainGif(GifImageView lBrainGif) {
@@ -47,9 +53,6 @@ public class OverlayView extends View {
     }
 
 
-
-
-
     public void setTLPanel(Bitmap tlPanel) {
         this.tlPanel = tlPanel;
     }
@@ -71,6 +74,9 @@ public class OverlayView extends View {
             setGifSize(rBrainGif, brainGifRect.width(), brainGifRect.height());
 
             this.post(() -> {
+
+                setBackgroundTintMode(PorterDuff.Mode.OVERLAY);
+
                 lBrainGif.setX(LR_PANEL_MARGIN + blPanel.getWidth() - brainGifRect.width());
                 lBrainGif.setY(TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
                         ((blPanel.getHeight() - lBrainGif.getHeight()) >> 1));
@@ -128,6 +134,7 @@ public class OverlayView extends View {
             updateFaceDetectionGif(faceBox);
         }
 
+
     }
 
     private void setGifSize(GifImageView gif, int width, int height) {
@@ -144,7 +151,6 @@ public class OverlayView extends View {
 
         canvas.drawBitmap(blPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
         canvas.drawBitmap(brPanel, getWidth() - brPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
-
     }
 
     private Rect scaleBox(Rect box) {

@@ -51,8 +51,13 @@ public class TopPanel {
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setTextSize(10 * context.getResources().getDisplayMetrics().density);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        paint.setStrokeWidth(15.0f);
+        paint.setStrokeWidth(6.0f);
+
+        paint.setColor(Color.WHITE);
+        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/Helvetica.ttf");
+        Typeface bold = Typeface.create(plain, Typeface.BOLD);
+        paint.setTypeface(bold);
+
 
         startColors = new int[] {Color.rgb(255, 100, 100),
                 Color.rgb(255, 255, 100),
@@ -70,6 +75,10 @@ public class TopPanel {
         rotateAngle = 270f;
         rotateMatrices = generateMatrices();
         resizeIcons(iconWidth);
+    }
+
+    public Bitmap getPanelBitmap() {
+        return panelBitmap;
     }
 
     private void resizeIcons(int iconWidth) {

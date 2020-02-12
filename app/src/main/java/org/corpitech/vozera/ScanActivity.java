@@ -22,11 +22,13 @@ import androidx.camera.core.PreviewConfig;
 import androidx.core.app.ActivityCompat;
 
 import org.corpitech.vozera.gui.OverlayView;
+import org.corpitech.vozera.gui.PanelsView;
 
 public class ScanActivity extends BaseModuleActivity {
     private TextureView cameraView;
     //private boolean mAnalyzeImageErrorState;
     private OverlayView canvasView;
+    private PanelsView panelsView;
     Processor processor;
 
 
@@ -49,13 +51,15 @@ public class ScanActivity extends BaseModuleActivity {
         checkCameraPermission();
         checkAudioRecordPermission();
 
+        panelsView = findViewById(R.id.panels_view);
 
-        canvasView = findViewById(org.corpitech.vozera.R.id.canvasView);
-        canvasView.setFaceDetectionGif(findViewById(org.corpitech.vozera.R.id.face_detection_bound));
+
+        canvasView = findViewById(R.id.canvasView);
+        canvasView.setFaceDetectionGif(findViewById(R.id.face_detection_bound));
         canvasView.setlBrainGif(findViewById(R.id.l_brain_animation));
         canvasView.setrBrainGif(findViewById(R.id.r_brain_animation));
 
-        processor = new Processor(canvasView, this);
+        processor = new Processor(panelsView, canvasView, this);
         this.cameraView = findViewById(org.corpitech.vozera.R.id.previewArea);
         cameraView.post(this::setupCameraX);
 

@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import static org.corpitech.vozera.Utils.debug;
+import static org.corpitech.vozera.Utils.adjustRectByBitmapSize;
 import static org.corpitech.vozera.Utils.getMaxInArrays;
 import static org.corpitech.vozera.Utils.subtractArrays;
 
@@ -183,7 +183,8 @@ class Processor {
             if (!chatter.isDetected()) {
                 chatter.setDetected(true);
                 canvasView.startFaceDetectionAnimation(chatter.getFaceBox());
-                panelsView.startFacePhotoMoving(faceBitmap, faceBox);
+                Rect extendedFaceBox = adjustRectByBitmapSize(getExtendedRect(faceBox, 20), new Size(bitmap.getWidth(), bitmap.getHeight()));
+                panelsView.startFacePhotoMoving(cropBitmap(bitmap, extendedFaceBox), extendedFaceBox);
             }
 
         } else {
@@ -219,6 +220,13 @@ class Processor {
     private Bitmap cropBitmap(Bitmap bitmap, Rect box) {
         return Bitmap.createBitmap(bitmap, box.left, box.top, box.right - box.left,
                 box.bottom - box.top);
+    }
+
+    private Rect getExtendedRect(Rect rect, int marginPercent) {
+        int widthMargin = rect.width() / 100  * marginPercent;
+        int heightMargin = rect.height() / 100 * marginPercent;
+        return new Rect(rect.left - widthMargin, rect.top - heightMargin,
+                rect.right + widthMargin, rect.bottom + heightMargin);
     }
 
     public void destroy() {

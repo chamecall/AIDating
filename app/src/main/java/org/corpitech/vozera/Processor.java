@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
+import static org.corpitech.vozera.Utils.debug;
 import static org.corpitech.vozera.Utils.getMaxInArrays;
 import static org.corpitech.vozera.Utils.subtractArrays;
 
@@ -52,7 +53,8 @@ class Processor {
     private Random random;
     private final int METRICS_NUM = 4;
     private Handler timerHandler = new Handler();
-
+    private Rect prevFaceBox;
+    private int FACE_POS_VARIANCE_THRESHOLD = 20;
 
     private Runnable topPanelAnimation = new Runnable() {
         @Override
@@ -120,7 +122,7 @@ class Processor {
         canvasView = overlayView;
         canvasView.setTopPanel(topPanel);
         canvasView.setBottomPanel(bottomPanel);
-        canvasView.updateTLPanel(new float[]{0, 0, 0, 0});
+        canvasView.updateTLPanel(new float[]{0.01f,0.11f,0.14f,0.17f});
         canvasView.updateTRPanel(new float[]{0, 0, 0, 0});
         canvasView.updateChatterScore( 0);
         canvasView.updateUserScore( 0);
@@ -159,6 +161,16 @@ class Processor {
 
         if (face != null) {
             Rect faceBox = Utils.adjustRectByBitmapSize(face.getBoundingBox(), new Size(bitmap.getWidth(), bitmap.getHeight()));
+            int varianceInDistance = FACE_POS_VARIANCE_THRESHOLD + 1;
+            if (prevFaceBox != null) {
+                 varianceInDistance = getDistanceBtwRects(prevFaceBox, faceBox);
+            }
+
+            prevFaceBox = faceBox;
+
+            if (varianceInDistance > FACE_POS_VARIANCE_THRESHOLD) {
+                return;
+            }
             Bitmap faceBitmap = cropBitmap(bitmap, faceBox);
 
 //                emotionRecognitionTask = executeTaskIfDone(emotionRecognitionTask, () -> recognizeEmotionByBitmap(faceBitmap));
@@ -179,7 +191,11 @@ class Processor {
             canvasView.stopFaceDetectionAnimation();
         }
 
+    }
 
+    private int getDistanceBtwRects(Rect fRect, Rect sRect) {
+        return (int)Math.sqrt(Math.pow(fRect.centerX() - sRect.centerX(), 2) +
+                Math.pow(fRect.centerY() - sRect.centerY(), 2));
     }
 
 

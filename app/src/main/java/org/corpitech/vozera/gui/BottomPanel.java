@@ -52,7 +52,7 @@ public class BottomPanel {
         //paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
 
-        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/Helvetica.ttf");
+        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/ComicNeueBold.ttf");
         Typeface bold = Typeface.create(plain, Typeface.BOLD);
 
         paint.setTypeface(bold);

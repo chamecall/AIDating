@@ -16,18 +16,19 @@ import android.util.Rational;
 import org.corpitech.vozera.R;
 
 import static android.graphics.BitmapFactory.decodeResource;
+import static org.corpitech.vozera.Utils.debug;
 
 public class TopPanel {
 
     private Bitmap panelBitmap;
-    private int cellWidth;
+    private float cellWidth;
     private int cellHeight;
-    private int circleRadius;
+    private float circleRadius;
     private Paint paint;
     private float rotateAngle;
     private int[] startColors, endColors;
     private Matrix[] rotateMatrices;
-    private int firstCircleX;
+    private float firstCircleX;
     private Context context;
     private final int LEFT_PADDING = 10;
     private int [] icons = {R.raw.lips, R.raw.coin, R.raw.lightning, R.raw.heart};
@@ -38,23 +39,23 @@ public class TopPanel {
         float scaleFactor = 0.7f;
         panelBitmap = Bitmap.createScaledBitmap(panelBitmap, (int)(panelBitmap.getWidth() * scaleFactor),
                 (int)(panelBitmap.getHeight() * scaleFactor), false);
-        panelBitmap = panelBitmap.copy(panelBitmap.getConfig(), true);
+        //panelBitmap = panelBitmap.copy(panelBitmap.getConfig(), true);
         //circleRadius = (int) (panelBitmap.getHeight() * 0.4 / 2);
         cellWidth = (panelBitmap.getWidth() - LEFT_PADDING) / 4;
         cellHeight = panelBitmap.getHeight();
 
         int iconWidth;
-        int circleDiameter = (int)(cellWidth * 0.5);
-        circleRadius = circleDiameter / 2;
+        float circleDiameter = cellWidth / 2.0f;
+        circleRadius = circleDiameter / 2.0f;
         firstCircleX = circleRadius + LEFT_PADDING;
-        iconWidth = cellWidth - circleRadius * 2;
+        iconWidth = (int)(cellWidth - circleRadius * 2);
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setTextSize(10 * context.getResources().getDisplayMetrics().density);
+        paint.setTextSize(14 * context.getResources().getDisplayMetrics().density);
         paint.setStrokeWidth(6.0f);
 
         paint.setColor(Color.WHITE);
-        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/Helvetica.ttf");
+        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/ComicNeueBold.ttf");
         Typeface bold = Typeface.create(plain, Typeface.BOLD);
         paint.setTypeface(bold);
 
@@ -91,17 +92,17 @@ public class TopPanel {
             int iconHeight = (int)(iconWidth / aspectRatio.floatValue());
             icon = Bitmap.createScaledBitmap(icon, iconWidth, iconHeight, false);
 
-            int startIconX = firstCircleX + circleRadius + cellWidth * i;
+            float startIconX = firstCircleX + circleRadius + cellWidth * i;
             canvas.drawBitmap(icon, startIconX, 0, paint);
         }
     }
 
     private Matrix[] generateMatrices() {
         Matrix [] rotateMatrices = new Matrix[4];
-        int startX = (int)(cellWidth * 0.33) ;
-        int y = cellHeight / 2;
+        float startX = cellWidth * 0.33f;
+        float y = cellHeight / 2;
         for (int i = 0; i < 4; i++) {
-            int x = startX + cellWidth * i;
+            float x = startX + cellWidth * i;
             Matrix rotateMatrix = new Matrix();
             rotateMatrix.preRotate(rotateAngle, x, y);
             rotateMatrices[i] = rotateMatrix;
@@ -110,30 +111,37 @@ public class TopPanel {
     }
 
 
-    public Bitmap generatePanel(float [] offsets) {
+    Bitmap generatePanel(float[] offsets) {
         Bitmap panelBitmapCopy = panelBitmap.copy(panelBitmap.getConfig(), true);
         Canvas canvas = new Canvas(panelBitmapCopy);
         paint.setStyle(Paint.Style.STROKE);
 
-        int y = cellHeight / 2;
+        float y = cellHeight / 2;
         for (int i = 0; i < 4; i++) {
-            int x = firstCircleX + cellWidth * i;
+            float x = firstCircleX + cellWidth * i;
             int curColor = (int)new ArgbEvaluator().evaluate(offsets[i], startColors[i], endColors[i]);
             int [] circleColors = new int[] {startColors[i], curColor, Color.WHITE};
             Shader shader = new SweepGradient(x, y, circleColors, new float[]{0, offsets[i], offsets[i]+0.1f});
             shader.setLocalMatrix(rotateMatrices[i]);
             paint.setShader(shader);
             canvas.drawCircle(x, y, circleRadius, paint);
+
+            Rect textRect = new Rect();
+            String score = String.valueOf((int)(offsets[i] * 100));
+            paint.getTextBounds(score, 0, score.length(), textRect);
+
+
         }
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
 
         for (int i = 0; i < 4; i++) {
-            int x = firstCircleX + cellWidth * i;
+            float x = firstCircleX + cellWidth * i;
             Rect textRect = new Rect();
             String score = String.valueOf((int)(offsets[i] * 100));
             paint.getTextBounds(score, 0, score.length(), textRect);
-            canvas.drawText(score, x - textRect.width() / 2, y + textRect.height() / 2, paint);
+
+            canvas.drawText(score, x - textRect.width() / 2.0f - 1, y + textRect.height() / 2.0f, paint);
         }
         return panelBitmapCopy;
     }

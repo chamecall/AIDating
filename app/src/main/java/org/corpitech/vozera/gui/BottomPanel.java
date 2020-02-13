@@ -1,7 +1,6 @@
 package org.corpitech.vozera.gui;
 
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,11 +8,10 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 
-import androidx.core.content.res.ResourcesCompat;
-
 import org.corpitech.vozera.R;
 
 import static android.graphics.BitmapFactory.decodeResource;
+import static org.corpitech.vozera.Utils.debug;
 
 public class BottomPanel {
 
@@ -22,22 +20,35 @@ public class BottomPanel {
     private Bitmap panelBitmap;
     private float [] cellsWidths = {0.33f, 0.33f, 0.33f};
     private Rect photoCell, nameAgeCell, emotionCell, gifCell;
-    private Bitmap prevChatterPhoto, prevUserPhoto;
     private int TEXT_SIZE = 25;
+    private int AVATAR_SIZE_IN_CELL_IN_PERCENT = 70;
+    private int width, height;
+
 
     public BottomPanel(Context context) {
         panelBitmap = decodeResource(context.getResources(), R.raw.bottom_panel);
         float scaleFactor = 0.7f;
         panelBitmap = Bitmap.createScaledBitmap(panelBitmap, (int)(panelBitmap.getWidth() * scaleFactor),
                 (int)(panelBitmap.getHeight() * scaleFactor), false);
-        panelBitmap = panelBitmap.copy(panelBitmap.getConfig(), true);
 
+        width = panelBitmap.getWidth();
+        height = panelBitmap.getHeight();
+        //panelBitmap = panelBitmap.copy(panelBitmap.getConfig(), true);
 
 
         calcCellsSizes();
+        initPaint(context);
+        drawAvatarBorder();
+
+
+    }
+
+    private void initPaint(Context context) {
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setTextSize(TEXT_SIZE * context.getResources().getDisplayMetrics().density);
         paint.setColor(Color.WHITE);
+        paint.setStrokeWidth(5);
+
         //paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
 
@@ -56,21 +67,49 @@ public class BottomPanel {
 
     }
 
+    private void drawAvatarBorder() {
+        paint.setStyle(Paint.Style.STROKE);
+        Canvas canvas = new Canvas(panelBitmap);
+        canvas.drawRect(photoCell, paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
     public Bitmap getPanelBitmap() {
         return panelBitmap;
     }
 
+    public Rect getPhotoCell() {
+        return photoCell;
+    }
+
     private void calcCellsSizes() {
-        int photoCellRightX = (int)(cellsWidths[0] * panelBitmap.getWidth());
-        photoCell = new Rect(0, 0, photoCellRightX, panelBitmap.getHeight());
+        int photoCellWidth = (int)(cellsWidths[0] * panelBitmap.getWidth());
 
-        int nameAgeCellRightX = photoCellRightX + (int)(cellsWidths[1] * panelBitmap.getWidth());
-        nameAgeCell = new Rect(photoCellRightX, 0, nameAgeCellRightX, panelBitmap.getHeight() / 2);
+        int avatar_size = (int)((photoCellWidth) * AVATAR_SIZE_IN_CELL_IN_PERCENT / 100.0f);
+        int avatarWidthMargin = (photoCellWidth - avatar_size) / 2;
+        int avatarHeightMargin = (panelBitmap.getHeight() - avatar_size) / 2;
 
-        emotionCell = new Rect(photoCellRightX, panelBitmap.getHeight() / 2, nameAgeCellRightX,
+        photoCell = new Rect(avatarWidthMargin, avatarHeightMargin, avatarWidthMargin + avatar_size, avatarHeightMargin + avatar_size);
+
+
+        int nameAgeCellRightX = photoCellWidth + (int)(cellsWidths[1] * panelBitmap.getWidth());
+        nameAgeCell = new Rect(photoCellWidth, 0, nameAgeCellRightX, panelBitmap.getHeight() / 2);
+
+        emotionCell = new Rect(photoCellWidth, panelBitmap.getHeight() / 2, nameAgeCellRightX,
                 panelBitmap.getHeight());
 
-        int gifCellRightX = nameAgeCellRightX + (int)(cellsWidths[2] * panelBitmap.getWidth());
+
+        int gifCellWidth = (int)(cellsWidths[2] * panelBitmap.getWidth());
+        int gifCellRightX = nameAgeCellRightX + gifCellWidth;
+
         gifCell = new Rect(nameAgeCellRightX, 0, gifCellRightX, panelBitmap.getHeight());
     }
 
@@ -78,37 +117,18 @@ public class BottomPanel {
         return gifCell;
     }
 
-    public Bitmap generateChatterPanel(Bitmap face, int totalScore) {
-        if (face != null) {
-            prevChatterPhoto = face;
-        }
-        return generatePanel(prevChatterPhoto, totalScore);
-    }
 
-    public Bitmap generateUserPhoto(Bitmap face, int totalScore) {
-        if (face != null) {
-            prevUserPhoto = face;
-        }
-        return generatePanel(prevUserPhoto, totalScore);
-    }
 
-    public Bitmap generatePanel(Bitmap face, int totalScore) {
-
-       // Bitmap panelBitmapCopy = panelBitmap.copy(panelBitmap.getConfig(), true);
-        Bitmap panelBitmapCopy = Bitmap.createBitmap(panelBitmap.getWidth(), panelBitmap.getHeight(), panelBitmap.getConfig() );
-        Canvas canvas = new Canvas(panelBitmapCopy);
-
-        if (face != null) {
-            Bitmap scaledPhoto = Bitmap.createScaledBitmap(face, photoCell.width(), photoCell.height(), false);
-            canvas.drawBitmap(scaledPhoto, photoCell.left, photoCell.top, paint);
-        }
+    public Bitmap generateScoreBitmap(int totalScore) {
+        Bitmap scoreBitmap = Bitmap.createBitmap(gifCell.width(), gifCell.height(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(scoreBitmap);
 
         String score = String.valueOf(totalScore);
         Rect textRect = new Rect();
 
         paint.getTextBounds(score, 0, score.length(), textRect);
-        canvas.drawText(score, gifCell.centerX() - textRect.width() / 2, gifCell.centerY() + textRect.height() / 2, paint);
+        canvas.drawText(score, (gifCell.width() - textRect.width()) / 2, (gifCell.height() + textRect.height()) / 2, paint);
         //canvas.drawText(score, gifCell.centerX() - textRect.width() / 2, gifCell.centerY() + textRect.height() / 2, textBorderPaint);
-        return panelBitmapCopy;
+        return scoreBitmap;
     }
 }

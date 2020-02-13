@@ -4,17 +4,94 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Size;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 
-public class PanelsView extends View {
-    private Bitmap bottomPanel;
-    private int topPanelHeight;
-    private Paint paint;
+import static android.graphics.Bitmap.createScaledBitmap;
+import static org.corpitech.vozera.Utils.debug;
 
+class LocatedBitmap {
+    private Bitmap bitmap;
+    private Point pos;
+
+    public LocatedBitmap(Bitmap bitmap, Point pos) {
+        this.bitmap = bitmap;
+        this.pos = pos;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public Point getPos() {
+        return pos;
+    }
+
+}
+
+class AnimationData {
+    private Point startPoint, axisDiff;
+    private Size startSize, sizeDiff;
+    private int stepsNum;
+    private int curStepNum = 1;
+    private Bitmap faceBitmap;
+
+    public AnimationData(Bitmap faceBitmap, Point startPoint, Point endPoint, Size startSize, Size endSize, int stepsNum) {
+        this.faceBitmap = faceBitmap;
+        this.startPoint = startPoint;
+        this.startSize = startSize;
+        this.stepsNum = stepsNum;
+
+        sizeDiff = new Size(endSize.getWidth() - startSize.getWidth(), endSize.getHeight() - startSize.getHeight());
+        axisDiff = new Point(endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+    }
+
+    public boolean stepsLeft() {
+        return curStepNum <= stepsNum;
+    }
+
+    private void incStep() {
+        curStepNum++;
+    }
+
+    private Size getNewSize() {
+        return new Size((int) (startSize.getWidth() + sizeDiff.getWidth() * curStepNum / stepsNum),
+                (int) (startSize.getHeight() + sizeDiff.getHeight() * curStepNum / stepsNum));
+    }
+
+    private Point getNewPos() {
+        return new Point((int) (startPoint.x + axisDiff.x * curStepNum / stepsNum),
+                (int) (startPoint.y + axisDiff.y * curStepNum / stepsNum));
+    }
+
+    public LocatedBitmap getNewLocatedBitmap(){
+
+        Size newSize = getNewSize();
+        Point newPos = getNewPos();
+        Bitmap scaledBitmap = createScaledBitmap(faceBitmap, newSize.getWidth(), newSize.getHeight(), false);
+        incStep();
+        return new LocatedBitmap(scaledBitmap, newPos);
+    }
+
+
+
+}
+
+public class PanelsView extends View {
+    private Paint paint;
+    private TopPanel topPanel;
     public final static int TOP_PANEL_MARGIN = 5, LR_PANEL_MARGIN = 10, VERTICAL_MARGIN_BTW_PANELS = 5;
+    private BottomPanel bottomPanel;
+    private float xRatio, yRatio;
+    private boolean moveFlag = false;
+    private AnimationData animationData;
+    private Bitmap chatterBottomPanelBitmap, userBottomPanelBitmap;
+
 
     public PanelsView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -22,12 +99,15 @@ public class PanelsView extends View {
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     }
 
-    public void setTlPanelHeight(int _topPanelHeight) {
-        this.topPanelHeight = _topPanelHeight;
+    public void setTopPanel(TopPanel topPanel) {
+        this.topPanel = topPanel;
     }
 
-    public void setBottomPanel(Bitmap _bottomPanel) {
-        bottomPanel = _bottomPanel;
+    public void setBottomPanel(BottomPanel bottomPanel) {
+        this.bottomPanel = bottomPanel;
+        this.chatterBottomPanelBitmap = this.userBottomPanelBitmap = bottomPanel.getPanelBitmap().copy(
+                bottomPanel.getPanelBitmap().getConfig(), false
+        );
     }
 
 
@@ -35,7 +115,50 @@ public class PanelsView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawBitmap(bottomPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN + topPanelHeight + VERTICAL_MARGIN_BTW_PANELS, paint);
-        canvas.drawBitmap(bottomPanel, getWidth() - bottomPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN + topPanelHeight + VERTICAL_MARGIN_BTW_PANELS, paint);
+        canvas.drawBitmap(chatterBottomPanelBitmap, LR_PANEL_MARGIN, TOP_PANEL_MARGIN + topPanel.getPanelBitmap().getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+        canvas.drawBitmap(userBottomPanelBitmap, getWidth() - chatterBottomPanelBitmap.getWidth() - LR_PANEL_MARGIN,
+                TOP_PANEL_MARGIN + topPanel.getPanelBitmap().getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+
+        if (moveFlag) {
+            if (animationData.stepsLeft()) {
+                LocatedBitmap newLocatedBitmap = animationData.getNewLocatedBitmap();
+                Bitmap newBitmap = newLocatedBitmap.getBitmap();
+                Point newPos = newLocatedBitmap.getPos();
+                canvas.drawBitmap(newBitmap, newPos.x, newPos.y, paint);
+
+                if (!animationData.stepsLeft()) {
+                    updateChatterPhoto(newBitmap);
+                    moveFlag = false;
+                }
+            }
+        }
+    }
+
+    private void updateChatterPhoto(Bitmap faceBitmap) {
+        Bitmap bottomPanelBitmapCopy = bottomPanel.getPanelBitmap().copy(bottomPanel.getPanelBitmap().getConfig(), true);
+        Canvas canvas = new Canvas(bottomPanelBitmapCopy);
+        canvas.drawBitmap(faceBitmap, bottomPanel.getPhotoCell().left, bottomPanel.getPhotoCell().top, paint);
+        chatterBottomPanelBitmap = bottomPanelBitmapCopy;
+    }
+
+    public void startFacePhotoMoving(Bitmap faceBitmap, Rect startFaceBox) {
+
+        Size startSize = new Size(faceBitmap.getWidth(), faceBitmap.getHeight());
+        //debug(bottomPanel.getPhotoCell())
+        Size endSize = new Size(bottomPanel.getPhotoCell().width(), bottomPanel.getPhotoCell().height());
+
+        Point startPoint = new Point((int) (startFaceBox.left * xRatio), (int) (startFaceBox.top * yRatio));
+        Point endPoint = new Point(LR_PANEL_MARGIN + bottomPanel.getPhotoCell().left,
+                TOP_PANEL_MARGIN + topPanel.getPanelBitmap().getHeight() + VERTICAL_MARGIN_BTW_PANELS + bottomPanel.getPhotoCell().top);
+        animationData = new AnimationData(faceBitmap, startPoint, endPoint, startSize, endSize, 10);
+        moveFlag = true;
+    }
+
+
+
+
+    public void adjustRatio(Size previewSize) {
+        this.xRatio = 1.0f * this.getWidth() / previewSize.getWidth();
+        this.yRatio = 1.0f * this.getHeight() / previewSize.getHeight();
     }
 }

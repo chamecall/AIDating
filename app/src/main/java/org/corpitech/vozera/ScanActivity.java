@@ -28,8 +28,8 @@ public class ScanActivity extends BaseModuleActivity {
     private TextureView cameraView;
     //private boolean mAnalyzeImageErrorState;
     private OverlayView canvasView;
-    private PanelsView panelsView;
     Processor processor;
+    PanelsView panelsView;
 
 
     private static final int REQUEST_CODE_CAMERA_PERMISSION = 200,
@@ -39,7 +39,8 @@ public class ScanActivity extends BaseModuleActivity {
 
 
     protected void frameAvailable() {
-        //canvasView.updateOverlay();
+        canvasView.invalidate();
+        panelsView.invalidate();
     }
 
 
@@ -52,7 +53,6 @@ public class ScanActivity extends BaseModuleActivity {
         checkAudioRecordPermission();
 
         panelsView = findViewById(R.id.panels_view);
-
 
         canvasView = findViewById(R.id.canvasView);
         canvasView.setFaceDetectionGif(findViewById(R.id.face_detection_bound));
@@ -148,6 +148,7 @@ public class ScanActivity extends BaseModuleActivity {
             setPreviewTransform(output);
             // to calc sizes ratio between bitmaps and overlay view
             canvasView.adjustRatio(output.getTextureSize());
+            panelsView.adjustRatio(output.getTextureSize());
 
             cameraView.setSurfaceTexture(surfaceTexture);
 

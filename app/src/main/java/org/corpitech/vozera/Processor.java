@@ -51,6 +51,8 @@ class Processor {
     private BottomPanel bottomPanel;
     private Random random;
     private final int METRICS_NUM = 4;
+    private Handler timerHandler = new Handler();
+
 
     private Runnable topPanelAnimation = new Runnable() {
         @Override
@@ -77,12 +79,12 @@ class Processor {
                 totalChatterScore = totalChatterScore / 4 * 1000;
                 totalUserScore = totalUserScore / 4 * 1000;
 
-                canvasView.setTLPanel(topPanel.generatePanel(curChatterValues));
-                canvasView.setTRPanel(topPanel.generatePanel(curUserValues));
-                canvasView.setBLPanel(bottomPanel.generateChatterPanel(null, (int)totalChatterScore));
-                canvasView.setBRPanel(bottomPanel.generateUserPhoto(null, (int)totalUserScore));
+                canvasView.updateTLPanel(curChatterValues);
+                canvasView.updateTRPanel(curUserValues);
+                canvasView.updateChatterScore((int)totalChatterScore);
+                canvasView.updateUserScore((int)totalUserScore);
 
-                canvasView.post(() -> canvasView.invalidate());
+                //canvasView.post(() -> canvasView.invalidate());
             });
 
             valueAnimator.addListener(new AnimatorListenerAdapter() {
@@ -104,23 +106,24 @@ class Processor {
         }
     };
 
-    private Handler timerHandler = new Handler();
 
-    public Processor(PanelsView _panelsView, OverlayView overlayView, Context context) {
+    public Processor(PanelsView panelsView, OverlayView overlayView, Context context) {
         random = new Random();
         topPanel = new TopPanel(context);
         bottomPanel = new BottomPanel(context);
 
-        panelsView = _panelsView;
-        panelsView.setBottomPanel(bottomPanel.getPanelBitmap());
-        panelsView.setTlPanelHeight(topPanel.getPanelBitmap().getHeight());
+        this.panelsView = panelsView;
+        panelsView.setTopPanel(topPanel);
+        panelsView.setBottomPanel(bottomPanel);
 
 
         canvasView = overlayView;
-        canvasView.setTLPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));
-        canvasView.setTRPanel(topPanel.generatePanel(new float[]{0, 0, 0, 0}));
-        canvasView.setBLPanel(bottomPanel.generateChatterPanel(null, 0));
-        canvasView.setBRPanel(bottomPanel.generateUserPhoto(null, 0));
+        canvasView.setTopPanel(topPanel);
+        canvasView.setBottomPanel(bottomPanel);
+        canvasView.updateTLPanel(new float[]{0, 0, 0, 0});
+        canvasView.updateTRPanel(new float[]{0, 0, 0, 0});
+        canvasView.updateChatterScore( 0);
+        canvasView.updateUserScore( 0);
 
         canvasView.setBrainGifPositions(bottomPanel.getGifCell());
 
@@ -155,22 +158,20 @@ class Processor {
 
 
         if (face != null) {
-            Rect box = Utils.adjustRectByBitmapSize(face.getBoundingBox(), new Size(bitmap.getWidth(), bitmap.getHeight()));
-            Bitmap faceBitmap = cropBitmap(bitmap, box);
+            Rect faceBox = Utils.adjustRectByBitmapSize(face.getBoundingBox(), new Size(bitmap.getWidth(), bitmap.getHeight()));
+            Bitmap faceBitmap = cropBitmap(bitmap, faceBox);
 
 //                emotionRecognitionTask = executeTaskIfDone(emotionRecognitionTask, () -> recognizeEmotionByBitmap(faceBitmap));
 //                beautyRecognitionTask = executeTaskIfDone(beautyRecognitionTask, () -> defineBeautyScore(faceBitmap));
 
 
-            chatter.setFaceBox(box);
+            chatter.setFaceBox(faceBox);
             canvasView.updateFaceBox(chatter.getFaceBox());
-            canvasView.setTLPanel(topPanel.generatePanel(generateRandomFloats()));
 
             if (!chatter.isDetected()) {
                 chatter.setDetected(true);
                 canvasView.startFaceDetectionAnimation(chatter.getFaceBox());
-                canvasView.setBLPanel(bottomPanel.generateChatterPanel(faceBitmap, 0));
-                canvasView.post(() -> canvasView.invalidate());
+                panelsView.startFacePhotoMoving(faceBitmap, faceBox);
             }
 
         } else {

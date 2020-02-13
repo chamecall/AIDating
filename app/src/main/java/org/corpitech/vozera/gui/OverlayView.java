@@ -1,20 +1,27 @@
 package org.corpitech.vozera.gui;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BlendMode;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Pair;
 import android.util.Size;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 
 import pl.droidsonroids.gif.GifImageView;
+
 
 import static org.corpitech.vozera.gui.PanelsView.LR_PANEL_MARGIN;
 import static org.corpitech.vozera.gui.PanelsView.TOP_PANEL_MARGIN;
@@ -24,8 +31,12 @@ public class OverlayView extends View {
     private Paint paint;
     private float xRatio, yRatio;
     GifImageView faceDetectionGif;
-    private Bitmap tlPanel, trPanel, blPanel, brPanel;
+    private Bitmap tlPanel, trPanel, chatterScore, userScore;
     private GifImageView lBrainGif, rBrainGif;
+    private TopPanel topPanel;
+    private BottomPanel bottomPanel;
+
+
 
     public void setlBrainGif(GifImageView lBrainGif) {
         this.lBrainGif = lBrainGif;
@@ -53,16 +64,20 @@ public class OverlayView extends View {
     }
 
 
-    public void setTLPanel(Bitmap tlPanel) {
-        this.tlPanel = tlPanel;
+    public void updateTLPanel(float [] values) {
+        this.tlPanel = topPanel.generatePanel(values);
     }
 
-    public void setTRPanel(Bitmap trPanel) {
-        this.trPanel = trPanel;
+    public void updateTRPanel(float [] values) {
+        this.trPanel = topPanel.generatePanel(values);
     }
 
-    public void setBLPanel(Bitmap blPanel) {
-        this.blPanel = blPanel;
+    public void updateChatterScore(int totalScore) {
+        this.chatterScore = bottomPanel.generateScoreBitmap(totalScore);
+    }
+
+    public void updateUserScore(int totalScore) {
+        this.userScore = bottomPanel.generateScoreBitmap(totalScore);
     }
 
     public void setBrainGifPositions(Rect brainGifRect) {
@@ -77,11 +92,11 @@ public class OverlayView extends View {
 
                 setBackgroundTintMode(PorterDuff.Mode.OVERLAY);
 
-                lBrainGif.setX(LR_PANEL_MARGIN + blPanel.getWidth() - brainGifRect.width());
+                lBrainGif.setX(LR_PANEL_MARGIN + bottomPanel.getWidth() - brainGifRect.width());
                 lBrainGif.setY(TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
-                        ((blPanel.getHeight() - lBrainGif.getHeight()) >> 1));
+                        ((bottomPanel.getHeight() - lBrainGif.getHeight()) >> 1));
                 rBrainGif.setY(TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
-                        ((brPanel.getHeight() - rBrainGif.getHeight()) >> 1));
+                        ((bottomPanel.getHeight() - rBrainGif.getHeight()) >> 1));
                 // we setX position in post cause before that we don't know width of the View
                 // and we calculate that after xml inflating
                 rBrainGif.setX(getWidth() - LR_PANEL_MARGIN - brainGifRect.width());
@@ -94,9 +109,7 @@ public class OverlayView extends View {
 
 
 
-    public void setBRPanel(Bitmap brPanel) {
-        this.brPanel = brPanel;
-    }
+
 
     public void startFaceDetectionAnimation(Rect faceBox) {
 
@@ -149,8 +162,11 @@ public class OverlayView extends View {
         canvas.drawBitmap(tlPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN, paint);
         canvas.drawBitmap(trPanel, getWidth() - trPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN, paint);
 
-        canvas.drawBitmap(blPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
-        canvas.drawBitmap(brPanel, getWidth() - brPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+        canvas.drawBitmap(chatterScore, LR_PANEL_MARGIN + bottomPanel.getGifCell().left, TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+        canvas.drawBitmap(userScore, getWidth() - LR_PANEL_MARGIN - bottomPanel.getWidth() + bottomPanel.getGifCell().left,
+                TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+
+
     }
 
     private Rect scaleBox(Rect box) {
@@ -161,5 +177,19 @@ public class OverlayView extends View {
 
         return new Rect(left, top, right, bottom);
     }
+
+
+
+    public void setTopPanel(TopPanel topPanel) {
+        this.topPanel = topPanel;
+    }
+
+    public void setBottomPanel(BottomPanel bottomPanel) {
+        this.bottomPanel = bottomPanel;
+    }
+
+
+
+
 
 }

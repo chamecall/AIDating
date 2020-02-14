@@ -56,7 +56,7 @@
         android:id="@+id/face_detection_bound"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@raw/va"
+        android:src="@raw/face_detect"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"

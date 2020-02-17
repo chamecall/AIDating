@@ -24,6 +24,8 @@ import androidx.core.app.ActivityCompat;
 import org.corpitech.vozera.gui.OverlayView;
 import org.corpitech.vozera.gui.PanelsView;
 
+import static org.corpitech.vozera.Utils.debug;
+
 public class ScanActivity extends BaseModuleActivity {
     private TextureView cameraView;
     //private boolean mAnalyzeImageErrorState;
@@ -58,6 +60,8 @@ public class ScanActivity extends BaseModuleActivity {
         canvasView.setFaceDetectionGif(findViewById(R.id.face_detection_bound));
         canvasView.setlBrainGif(findViewById(R.id.l_brain_animation));
         canvasView.setrBrainGif(findViewById(R.id.r_brain_animation));
+        canvasView.setlBrainBack(findViewById(R.id.l_brain_back));
+        canvasView.setrBrainBack(findViewById(R.id.r_brain_back));
 
         processor = new Processor(panelsView, canvasView, this);
         this.cameraView = findViewById(org.corpitech.vozera.R.id.previewArea);
@@ -133,6 +137,7 @@ public class ScanActivity extends BaseModuleActivity {
         int rotation = cameraView.getDisplay().getRotation();
 
         CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
+
         final PreviewConfig previewConfig = createPreviewConfig(previewSize, aspectRatio, rotation, lensFacing);
         final ImageAnalysisConfig analysisConfig = createAnalysisConfig(previewSize, aspectRatio, rotation, lensFacing);
 
@@ -149,7 +154,6 @@ public class ScanActivity extends BaseModuleActivity {
             // to calc sizes ratio between bitmaps and overlay view
             canvasView.adjustRatio(output.getTextureSize());
             panelsView.adjustRatio(output.getTextureSize());
-
             cameraView.setSurfaceTexture(surfaceTexture);
 
             cameraView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -206,29 +210,31 @@ public class ScanActivity extends BaseModuleActivity {
 
     private void setPreviewTransform(Preview.PreviewOutput output) {
         Matrix matrix = new Matrix();
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        cameraView.getDisplay().getRealMetrics(displayMetrics);
 
         float centerX = cameraView.getWidth() / 2.0f;
         float centerY = cameraView.getHeight() / 2.0f;
+
+
         int angle = getDisplaySurfaceRotation(cameraView.getDisplay().getRotation());
         matrix.postRotate(-angle, centerX, centerY);
 
-        float bufferRatio = (float) output.getTextureSize().getHeight() / output.getTextureSize().getWidth();
+        float bufferRatio = (float) output.getTextureSize().getWidth() / output.getTextureSize().getHeight();
 
-        int scaledWidth, scaledHeight;
-
-        if (cameraView.getWidth() > cameraView.getHeight()) {
+        float scaledWidth, scaledHeight;
+        if (angle == 90 || angle == 270) {
+            scaledWidth = cameraView.getWidth() / bufferRatio;
             scaledHeight = cameraView.getWidth();
-            scaledWidth = Math.round(cameraView.getWidth() * bufferRatio);
         } else {
-            scaledHeight = cameraView.getHeight();
-            scaledWidth = Math.round(cameraView.getHeight() * bufferRatio);
+            scaledWidth = cameraView.getWidth();
+            scaledHeight = cameraView.getWidth() / bufferRatio;
         }
 
+//
+        debug(scaledWidth, cameraView.getWidth());
+        debug(scaledHeight, cameraView.getHeight());
         float xScale = (float) scaledWidth / cameraView.getWidth();
-        float yScale = (float) scaledHeight / cameraView.getHeight();
-
+        float yScale = scaledHeight / cameraView.getHeight();
+//
         matrix.preScale(xScale, yScale, centerX, centerY);
         cameraView.setTransform(matrix);
     }

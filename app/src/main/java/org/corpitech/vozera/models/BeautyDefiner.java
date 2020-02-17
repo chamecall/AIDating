@@ -17,7 +17,7 @@ public class BeautyDefiner {
 
 
     public BeautyDefiner(Context context) {
-        final String moduleFileAbsoluteFilePath = new File(Utils.assetFilePath(context, "model.pt")).getPath();
+        final String moduleFileAbsoluteFilePath = new File(Utils.assetFilePath(context, "beauty_model.pt")).getPath();
         mModule = Module.load(moduleFileAbsoluteFilePath);
     }
 

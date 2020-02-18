@@ -1,28 +1,24 @@
 package org.corpitech.vozera.gui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BlendMode;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.PorterDuff;
 import android.graphics.Rect;
-import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Pair;
 import android.util.Size;
 import android.view.View;
+import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 
+import pl.droidsonroids.gif.AnimationListener;
+import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 
+import static org.corpitech.vozera.Utils.debug;
 import static org.corpitech.vozera.gui.PanelsView.LR_PANEL_MARGIN;
 import static org.corpitech.vozera.gui.PanelsView.TOP_PANEL_MARGIN;
 import static org.corpitech.vozera.gui.PanelsView.VERTICAL_MARGIN_BTW_PANELS;
@@ -35,7 +31,8 @@ public class OverlayView extends View {
     private GifImageView lBrainGif, rBrainGif;
     private TopPanel topPanel;
     private BottomPanel bottomPanel;
-
+    private ImageView lBrainBack, rBrainBack;
+    private float scoreBitmapY;
 
 
     public void setlBrainGif(GifImageView lBrainGif) {
@@ -61,6 +58,7 @@ public class OverlayView extends View {
 
     public void setFaceDetectionGif(GifImageView gifImageView) {
         this.faceDetectionGif = gifImageView;
+
     }
 
 
@@ -85,23 +83,40 @@ public class OverlayView extends View {
 
             lBrainGif.setVisibility(INVISIBLE);
             rBrainGif.setVisibility(INVISIBLE);
-            setGifSize(lBrainGif, brainGifRect.width(), brainGifRect.height());
-            setGifSize(rBrainGif, brainGifRect.width(), brainGifRect.height());
+            lBrainBack.setVisibility(INVISIBLE);
+            setViewSize(lBrainGif, brainGifRect.width(), brainGifRect.height());
+            setViewSize(rBrainGif, brainGifRect.width(), brainGifRect.height());
+            setViewSize(lBrainBack, brainGifRect.width(), brainGifRect.height());
+            setViewSize(rBrainBack, brainGifRect.width(), brainGifRect.height());
+
 
             this.post(() -> {
-
-                setBackgroundTintMode(PorterDuff.Mode.OVERLAY);
-
-                lBrainGif.setX(LR_PANEL_MARGIN + bottomPanel.getWidth() - brainGifRect.width());
-                lBrainGif.setY(TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
-                        ((bottomPanel.getHeight() - lBrainGif.getHeight()) >> 1));
-                rBrainGif.setY(TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
-                        ((bottomPanel.getHeight() - rBrainGif.getHeight()) >> 1));
-                // we setX position in post cause before that we don't know width of the View
+                // we set positions in post as before that we don't know width of the View
                 // and we calculate that after xml inflating
-                rBrainGif.setX(getWidth() - LR_PANEL_MARGIN - brainGifRect.width());
+                int leftMargin =  (brainGifRect.width() - lBrainGif.getWidth()) / 2;
+                float lx = LR_PANEL_MARGIN + bottomPanel.getWidth() - brainGifRect.width() + leftMargin;
+                float y = TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS +
+                        (bottomPanel.getHeight() - lBrainGif.getHeight()) / 2.0f;
+                float rx = getWidth() - LR_PANEL_MARGIN - brainGifRect.width() + leftMargin;
+
+                scoreBitmapY = (float)(TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS - lBrainGif.getHeight() * 0.1);
+
+                lBrainGif.setX(lx);
+                lBrainGif.setY(y);
+
+                rBrainGif.setX(rx);
+                rBrainGif.setY(y);
+
+                lBrainBack.setX(lx);
+                lBrainBack.setY(y);
+
+                rBrainBack.setX(rx);
+                rBrainBack.setY(y);
+
                 lBrainGif.setVisibility(VISIBLE);
                 rBrainGif.setVisibility(VISIBLE);
+                lBrainBack.setVisibility(VISIBLE);
+                rBrainBack.setVisibility(VISIBLE);
             });
 
         }
@@ -116,13 +131,14 @@ public class OverlayView extends View {
         if (faceBox != null) {
             if (faceDetectionGif.getVisibility() == GONE) {
                 updateFaceDetectionGif(faceBox);
+                GifDrawable gifDrawable = (GifDrawable) faceDetectionGif.getDrawable();
+                gifDrawable.reset();
                 this.post(() -> faceDetectionGif.setVisibility(VISIBLE));
-                Runnable runnable = () -> this.faceDetectionGif.setVisibility(GONE);
-                this.postDelayed(runnable, 2000);
             }
         }
 
     }
+
 
     public void stopFaceDetectionAnimation() {
         this.post(() -> faceDetectionGif.setVisibility(GONE));
@@ -133,7 +149,7 @@ public class OverlayView extends View {
         int diameter = (int) Math.sqrt(Math.pow(scaledFaceBox.height(), 2) + Math.pow(scaledFaceBox.width(), 2));
         float circleLeft = scaledFaceBox.left - (diameter - scaledFaceBox.width()) / 2.0f;
         float circleTop = scaledFaceBox.top - (diameter - scaledFaceBox.height()) / 2.0f;
-        setGifSize(faceDetectionGif, diameter, diameter);
+        setViewSize(faceDetectionGif, diameter, diameter);
         this.post(() -> {
             faceDetectionGif.setX(circleLeft);
             faceDetectionGif.setY(circleTop);
@@ -150,7 +166,7 @@ public class OverlayView extends View {
 
     }
 
-    private void setGifSize(GifImageView gif, int width, int height) {
+    private void setViewSize(ImageView gif, int width, int height) {
         gif.setMaxWidth(width);
         gif.setMaxHeight(height);
     }
@@ -162,9 +178,10 @@ public class OverlayView extends View {
         canvas.drawBitmap(tlPanel, LR_PANEL_MARGIN, TOP_PANEL_MARGIN, paint);
         canvas.drawBitmap(trPanel, getWidth() - trPanel.getWidth() - LR_PANEL_MARGIN, TOP_PANEL_MARGIN, paint);
 
-        canvas.drawBitmap(chatterScore, LR_PANEL_MARGIN + bottomPanel.getGifCell().left, TOP_PANEL_MARGIN + tlPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+
+        canvas.drawBitmap(chatterScore, LR_PANEL_MARGIN + bottomPanel.getGifCell().left, scoreBitmapY, paint);
         canvas.drawBitmap(userScore, getWidth() - LR_PANEL_MARGIN - bottomPanel.getWidth() + bottomPanel.getGifCell().left,
-                TOP_PANEL_MARGIN + trPanel.getHeight() + VERTICAL_MARGIN_BTW_PANELS, paint);
+                scoreBitmapY, paint);
 
 
     }
@@ -189,7 +206,11 @@ public class OverlayView extends View {
     }
 
 
+    public void setlBrainBack(ImageView brainBack) {
+        lBrainBack = brainBack;
+    }
 
-
-
+    public void setrBrainBack(ImageView brainBack) {
+        rBrainBack = brainBack;
+    }
 }

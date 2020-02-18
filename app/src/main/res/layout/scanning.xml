@@ -26,6 +26,28 @@
         />
 
 
+    <ImageView
+        android:id="@+id/l_brain_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/brain_back"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:adjustViewBounds="true"
+        />
+
+    <ImageView
+        android:id="@+id/r_brain_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/brain_back"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:adjustViewBounds="true"
+        />
+
 
     <pl.droidsonroids.gif.GifImageView
         android:id="@+id/l_brain_animation"
@@ -37,6 +59,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         android:adjustViewBounds="true"
+
         />
 
     <pl.droidsonroids.gif.GifImageView
@@ -61,6 +84,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         android:adjustViewBounds="true"
+
         />
 
     <org.corpitech.vozera.gui.OverlayView

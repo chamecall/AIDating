@@ -55,7 +55,7 @@ public class TopPanel {
         paint.setStrokeWidth(6.0f);
 
         paint.setColor(Color.WHITE);
-        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/ComicNeueBold.ttf");
+        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/LatoBold.ttf");
         Typeface bold = Typeface.create(plain, Typeface.BOLD);
         paint.setTypeface(bold);
 

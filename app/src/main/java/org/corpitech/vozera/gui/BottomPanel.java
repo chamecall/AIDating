@@ -18,10 +18,10 @@ public class BottomPanel {
 
     private Paint paint, textBorderPaint;
     private Bitmap panelBitmap;
-    private float [] cellsWidths = {0.33f, 0.33f, 0.33f};
+    private float [] cellsWidths = {0.3f, 0.3f, 0.4f};
     private Rect photoCell, nameAgeCell, emotionCell, gifCell;
-    private int TEXT_SIZE = 25;
-    private int AVATAR_SIZE_IN_CELL_IN_PERCENT = 70;
+    private int TEXT_SIZE = 19;
+    private int AVATAR_SIZE_IN_CELL_IN_PERCENT = 80;
     private int width, height;
 
 
@@ -39,9 +39,11 @@ public class BottomPanel {
         calcCellsSizes();
         initPaint(context);
         drawAvatarBorder();
+        paint.setShadowLayer(1.0f, 1.0f, 4.0f, Color.BLACK);
 
 
     }
+
 
     private void initPaint(Context context) {
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -52,7 +54,7 @@ public class BottomPanel {
         //paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
 
-        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/ComicNeueBold.ttf");
+        Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/LatoBlack.ttf");
         Typeface bold = Typeface.create(plain, Typeface.BOLD);
 
         paint.setTypeface(bold);

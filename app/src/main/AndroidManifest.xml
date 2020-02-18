@@ -10,7 +10,7 @@
         android:theme="@style/FullScreen">
 
         <activity android:name="org.corpitech.vozera.MainActivity"
-            android:screenOrientation="landscape"
+            android:screenOrientation="sensorLandscape"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,7 +20,7 @@
         <activity
             android:name="org.corpitech.vozera.ScanActivity"
             android:label="@string/scanning"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="sensorLandscape" />
 
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"

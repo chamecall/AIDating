@@ -129,9 +129,9 @@ class Processor {
 
         canvasView.setBrainGifPositions(bottomPanel.getGifCell());
 
-        beautyDefiner = new BeautyDefiner(context);
+        //beautyDefiner = new BeautyDefiner(this);
 
-        emotionRecognizer = new EmotionRecognizer(context);
+        //emotionRecognizer = new EmotionRecognizer(this);
         chatter = new Chatter();
         user = new User();
         faceAnalyzer = new FaceAnalyzer();
@@ -173,8 +173,8 @@ class Processor {
             }
             Bitmap faceBitmap = cropBitmap(bitmap, faceBox);
 
-                emotionRecognitionTask = executeTaskIfDone(emotionRecognitionTask, () -> recognizeEmotionByBitmap(faceBitmap));
-                beautyRecognitionTask = executeTaskIfDone(beautyRecognitionTask, () -> defineBeautyScore(faceBitmap));
+//                emotionRecognitionTask = executeTaskIfDone(emotionRecognitionTask, () -> recognizeEmotionByBitmap(faceBitmap));
+//                beautyRecognitionTask = executeTaskIfDone(beautyRecognitionTask, () -> defineBeautyScore(faceBitmap));
 
 
             chatter.setFaceBox(faceBox);
@@ -200,7 +200,7 @@ class Processor {
     }
 
 
-    private FutureTask executeTaskIfDone(FutureTask task, Runnable runnable) {
+    FutureTask executeTaskIfDone(FutureTask task, Runnable runnable) {
         if (task == null || task.isDone()) {
             task = (FutureTask) executorService.submit(runnable);
         }

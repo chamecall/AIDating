@@ -2,6 +2,7 @@ package org.corpitech.vozera.models;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+import android.util.Log;
 import org.pytorch.IValue;
 import org.pytorch.Module;
 import org.pytorch.Tensor;
@@ -27,6 +28,9 @@ public class BeautyDefiner {
         Tensor mInputTensor = TensorImageUtils.bitmapToFloat32Tensor(bitmap, new float[]{0, 0, 0}, new float[]{1, 1, 1});
 
         final Tensor outputTensor = mModule.forward(IValue.from(mInputTensor)).toTensor();
+
+        Log.d("HELP", String.valueOf(outputTensor.getDataAsFloatArray()[0]));
+
         return outputTensor.getDataAsFloatArray()[0];
     }
 

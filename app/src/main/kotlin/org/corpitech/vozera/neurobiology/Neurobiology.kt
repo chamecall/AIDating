@@ -1,25 +1,36 @@
 package org.corpitech.vozera.neurobiology
 
-class Neurobiology(_sex : Int, _age : Int, _beauty : Double) {
-    var Dominance = 50
-    var Sexual = 50
-    var Resource = 50
-    var Social = 50
+import android.util.Log
+
+class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
+    var Dominance = 0
+    var Sexual = 0
+    var Resource = 0
+    var Social = 0
 
     val Value: Int
         get() {
             return (Dominance + Sexual + Resource + Social) * 999 / 396 // 4*99
         }
 
-    private val _sexHistory : MutableList<Int> = mutableListOf();
-    private val _ageHistory : MutableList<Int> = mutableListOf();
-    private val _beautyHistory : MutableList<Double> = mutableListOf();
+    private val _sexHistory: MutableList<Int> = mutableListOf();
+    private val _ageHistory: MutableList<Int> = mutableListOf();
+    private val _beautyHistory: MutableList<Float> = mutableListOf();
 
     init {
-        UpdateScores(_sex, _age, _beauty)
+        updateScores(_sex, _age, _beauty)
     }
 
-    fun UpdateScores(_sex: Int, _age: Int, _beauty: Double) {
+    fun getScores(): Array<Float> {
+        Log.i("TEST", "$Dominance $Resource $Social $Sexual")
+        return arrayOf(Dominance / 100.0f, Resource / 100f, Social / 100f, Sexual / 100f)
+    }
+
+
+    fun updateScores(_sex: Int, _age: Int, _beauty: Float?) {
+        if (_beauty == null)
+            return
+
         if (_sexHistory.count() >= 4) {
             _sexHistory.removeAt(0)
         }
@@ -31,32 +42,37 @@ class Neurobiology(_sex : Int, _age : Int, _beauty : Double) {
         if (_beautyHistory.count() >= 4) {
             _beautyHistory.removeAt(0)
         }
+
         _beautyHistory.add(_beauty)
 
         val beautyForCalculation = _sexHistory.average()
         val ageForCalculation = _ageHistory.average()
 
+
         Dominance = if (beautyForCalculation >= 4.3) {
             (50 + ((beautyForCalculation - 4) * 10)).toInt()
         } else {
-            ((((beautyForCalculation) * 0.49) / 0.29)*10).toInt()
+            ((((beautyForCalculation) * 0.49) / 0.29) * 10).toInt()
         }
 
-        Sexual = when(ageForCalculation) {
+        Sexual = when (ageForCalculation) {
             in 18..25 -> {
-                (10*beautyForCalculation + 50).toInt()
+                (10 * beautyForCalculation + 50).toInt()
             }
             in 25..35 -> {
-                (10*beautyForCalculation + 40).toInt()
+                (10 * beautyForCalculation + 40).toInt()
             }
             else -> {
-                (10*beautyForCalculation + 30).toInt()
+                (10 * beautyForCalculation + 30).toInt()
             }
         }
 
-        Resource = (8*beautyForCalculation + (80-ageForCalculation)).toInt()
+        Resource = (8 * beautyForCalculation + (80 - when(ageForCalculation){
+            in 18..25 -> 50
+            in 25..35 -> 40
+            else -> 30
+        })).toInt()
     }
-
 
 
 }

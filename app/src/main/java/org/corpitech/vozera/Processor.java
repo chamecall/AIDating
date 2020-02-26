@@ -22,6 +22,7 @@ import org.corpitech.vozera.gui.TopPanel;
 import org.corpitech.vozera.models.BeautyDefiner;
 import org.corpitech.vozera.models.EmotionRecognizer;
 import org.corpitech.vozera.models.FaceAnalyzer;
+import org.corpitech.vozera.neurobiology.Neurobiology;
 import org.corpitech.vozera.person.Chatter;
 import org.corpitech.vozera.person.User;
 
@@ -42,6 +43,9 @@ class Processor {
     private BeautyDefiner beautyDefiner;
     private Chatter chatter;
     private User user;
+
+    private Neurobiology chatterModel;
+
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
     private FutureTask emotionRecognitionTask;
     private FutureTask beautyRecognitionTask;
@@ -60,20 +64,23 @@ class Processor {
         @Override
         public void run() {
 
-            float [] newChatterMetrics = generateRandomFloats(), newUserMetrics = generateRandomFloats();
-            float [] chatterMetricsDiffs = subtractArrays(newChatterMetrics, chatter.getMetrics());
-            float [] userMetricsDiffs = subtractArrays(newUserMetrics, user.getMetrics());
+            float[] newChatterMetrics = {0f, 0f, 0f, 0f}, newUserMetrics = generateRandomFloats();
+            float[] chatterMetricsDiffs = subtractArrays(newChatterMetrics, chatter.getMetrics());
+            float[] userMetricsDiffs = subtractArrays(newUserMetrics, user.getMetrics());
             float maxValue = getMaxInArrays(chatterMetricsDiffs, userMetricsDiffs);
+
+            chatterModel.updateScores(0, 0, chatter.getBeautyScore());
+
 
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, maxValue);
             valueAnimator.addUpdateListener(valueAnimator1 -> {
                 float curFraction = valueAnimator.getAnimatedFraction();
-                float [] curChatterValues = new float[METRICS_NUM];
-                float [] curUserValues = new float[METRICS_NUM];
+                float[] curChatterValues = new float[METRICS_NUM];
+                float[] curUserValues = new float[METRICS_NUM];
 
                 float totalUserScore = 0.0f, totalChatterScore = 0.0f;
                 for (int i = 0; i < METRICS_NUM; i++) {
-                    curChatterValues[i] = chatter.getMetrics()[i] + chatterMetricsDiffs[i] * curFraction;
+                    curChatterValues[i] = chatterModel.getScores()[i] + chatterMetricsDiffs[i] * curFraction;
                     curUserValues[i] = user.getMetrics()[i] + userMetricsDiffs[i] * curFraction;
                     totalChatterScore += curChatterValues[i];
                     totalUserScore += curUserValues[i];
@@ -83,8 +90,8 @@ class Processor {
 
                 canvasView.updateTLPanel(curChatterValues);
                 canvasView.updateTRPanel(curUserValues);
-                canvasView.updateChatterScore((int)totalChatterScore);
-                canvasView.updateUserScore((int)totalUserScore);
+                canvasView.updateChatterScore((int) totalChatterScore);
+                canvasView.updateUserScore((int) totalUserScore);
 
                 //canvasView.post(() -> canvasView.invalidate());
             });
@@ -101,7 +108,6 @@ class Processor {
 
             valueAnimator.setDuration(500);
             valueAnimator.start();
-
 
 
             timerHandler.postDelayed(this, 5000);
@@ -122,10 +128,10 @@ class Processor {
         canvasView = overlayView;
         canvasView.setTopPanel(topPanel);
         canvasView.setBottomPanel(bottomPanel);
-        canvasView.updateTLPanel(new float[]{0.01f,0.11f,0.14f,0.17f});
+        canvasView.updateTLPanel(new float[]{0f, 0f, 0f, 0f});
         canvasView.updateTRPanel(new float[]{0, 0, 0, 0});
-        canvasView.updateChatterScore( 0);
-        canvasView.updateUserScore( 0);
+        canvasView.updateChatterScore(0);
+        canvasView.updateUserScore(0);
 
         canvasView.setBrainGifPositions(bottomPanel.getGifCell());
 
@@ -135,6 +141,9 @@ class Processor {
         chatter = new Chatter();
         user = new User();
         faceAnalyzer = new FaceAnalyzer();
+
+        chatterModel = new Neurobiology(0, 0, 0);
+
 
         timerHandler.postDelayed(topPanelAnimation, 5000);
 
@@ -163,7 +172,7 @@ class Processor {
             Rect faceBox = Utils.adjustRectByBitmapSize(face.getBoundingBox(), new Size(bitmap.getWidth(), bitmap.getHeight()));
             int varianceInDistance = FACE_POS_VARIANCE_THRESHOLD + 1;
             if (prevFaceBox != null) {
-                 varianceInDistance = getDistanceBtwRects(prevFaceBox, faceBox);
+                varianceInDistance = getDistanceBtwRects(prevFaceBox, faceBox);
             }
 
             prevFaceBox = faceBox;
@@ -195,7 +204,7 @@ class Processor {
     }
 
     private int getDistanceBtwRects(Rect fRect, Rect sRect) {
-        return (int)Math.sqrt(Math.pow(fRect.centerX() - sRect.centerX(), 2) +
+        return (int) Math.sqrt(Math.pow(fRect.centerX() - sRect.centerX(), 2) +
                 Math.pow(fRect.centerY() - sRect.centerY(), 2));
     }
 
@@ -223,7 +232,7 @@ class Processor {
     }
 
     private Rect getExtendedRect(Rect rect, int marginPercent) {
-        int widthMargin = rect.width() / 100  * marginPercent;
+        int widthMargin = rect.width() / 100 * marginPercent;
         int heightMargin = rect.height() / 100 * marginPercent;
         return new Rect(rect.left - widthMargin, rect.top - heightMargin,
                 rect.right + widthMargin, rect.bottom + heightMargin);

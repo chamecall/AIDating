@@ -16,7 +16,7 @@ class Neurobiology(_sex : Int, _age : Int, _beauty : Double) {
     private val _beautyHistory : MutableList<Double> = mutableListOf();
 
     init {
-
+        UpdateScores(_sex, _age, _beauty)
     }
 
     fun UpdateScores(_sex: Int, _age: Int, _beauty: Double) {
@@ -35,11 +35,11 @@ class Neurobiology(_sex : Int, _age : Int, _beauty : Double) {
 
         val beautyForCalculation = _sexHistory.average()
         val ageForCalculation = _ageHistory.average()
-        
-        if (beautyForCalculation >= 4.3) {
-            Dominance = (50 + ((beautyForCalculation - 4) * 10)).toInt()
+
+        Dominance = if (beautyForCalculation >= 4.3) {
+            (50 + ((beautyForCalculation - 4) * 10)).toInt()
         } else {
-            Dominance = ((((beautyForCalculation) * 0.49) / 0.29)*10).toInt()
+            ((((beautyForCalculation) * 0.49) / 0.29)*10).toInt()
         }
 
         Sexual = when(ageForCalculation) {
@@ -53,6 +53,8 @@ class Neurobiology(_sex : Int, _age : Int, _beauty : Double) {
                 (10*beautyForCalculation + 30).toInt()
             }
         }
+
+        Resource = (8*beautyForCalculation + (80-ageForCalculation)).toInt()
     }
 
 

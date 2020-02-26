@@ -56,10 +56,10 @@ class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
         }
 
         Sexual = when (ageForCalculation) {
-            in 18..25 -> {
+            in 18.0..25.0 -> {
                 (10 * beautyForCalculation + 50).toInt()
             }
-            in 25..35 -> {
+            in 25.0..35.0 -> {
                 (10 * beautyForCalculation + 40).toInt()
             }
             else -> {
@@ -68,8 +68,8 @@ class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
         }
 
         Resource = (8 * beautyForCalculation + (80 - when(ageForCalculation){
-            in 18..25 -> 50
-            in 25..35 -> 40
+            in 18.0..25.0 -> 50
+            in 25.0..35.0 -> 40
             else -> 30
         })).toInt()
     }

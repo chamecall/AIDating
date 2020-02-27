@@ -23,6 +23,7 @@ import org.corpitech.vozera.models.BeautyDefiner;
 import org.corpitech.vozera.models.EmotionRecognizer;
 import org.corpitech.vozera.models.FaceAnalyzer;
 import org.corpitech.vozera.neurobiology.Neurobiology;
+import org.corpitech.vozera.neurobiology.NeurobiologyEngine;
 import org.corpitech.vozera.person.Chatter;
 import org.corpitech.vozera.person.User;
 
@@ -44,7 +45,7 @@ class Processor {
     private Chatter chatter;
     private User user;
 
-    private Neurobiology chatterModel;
+    private final NeurobiologyEngine engine = new NeurobiologyEngine();
 
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
     private FutureTask emotionRecognitionTask;
@@ -63,13 +64,24 @@ class Processor {
     private Runnable topPanelAnimation = new Runnable() {
         @Override
         public void run() {
+            Float[] oldChatterMetrics = engine.getPartner().getScores();
 
-            float[] newChatterMetrics = {0f, 0f, 0f, 0f}, newUserMetrics = generateRandomFloats();
-            float[] chatterMetricsDiffs = subtractArrays(newChatterMetrics, chatter.getMetrics());
+            engine.getMe().updateScores(0,0,0f);
+            if (engine.getPartner() != null) {
+                engine.getPartner().updateScores(0,0,chatter.getBeautyScore());
+            }
+
+            Float[] newScoresChatter= engine.getPartner().getScores();
+
+            float[] newChatterMetrics = new float[]{newScoresChatter[0], newScoresChatter[1], newScoresChatter[2], newScoresChatter[3]},
+                    newUserMetrics = {0f, 0f, 0f, 0f};
+
+            float[] chatterMetricsDiffs = subtractArrays(newChatterMetrics,
+                    new float[]{oldChatterMetrics[0], oldChatterMetrics[1], oldChatterMetrics[2], oldChatterMetrics[3]});
             float[] userMetricsDiffs = subtractArrays(newUserMetrics, user.getMetrics());
             float maxValue = getMaxInArrays(chatterMetricsDiffs, userMetricsDiffs);
 
-            chatterModel.updateScores(0, 0, chatter.getBeautyScore());
+
 
 
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, maxValue);
@@ -80,8 +92,8 @@ class Processor {
 
                 float totalUserScore = 0.0f, totalChatterScore = 0.0f;
                 for (int i = 0; i < METRICS_NUM; i++) {
-                    curChatterValues[i] = chatterModel.getScores()[i] + chatterMetricsDiffs[i] * curFraction;
-                    curUserValues[i] = user.getMetrics()[i] + userMetricsDiffs[i] * curFraction;
+                    curChatterValues[i] = oldChatterMetrics[i] + chatterMetricsDiffs[i] * curFraction;
+                    curUserValues[i] = engine.getMe().getScores()[i] + userMetricsDiffs[i] * curFraction;
                     totalChatterScore += curChatterValues[i];
                     totalUserScore += curUserValues[i];
                 }
@@ -141,10 +153,6 @@ class Processor {
         chatter = new Chatter();
         user = new User();
         faceAnalyzer = new FaceAnalyzer();
-
-        chatterModel = new Neurobiology(0, 0, 0);
-
-
         timerHandler.postDelayed(topPanelAnimation, 5000);
 
     }

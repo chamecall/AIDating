@@ -1,6 +1,12 @@
 package org.corpitech.vozera.neurobiology
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.*
+import kotlin.random.Random
 
 class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
     var Dominance = 0
@@ -26,10 +32,9 @@ class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
         return arrayOf(Dominance / 100.0f, Resource / 100f, Social / 100f, Sexual / 100f)
     }
 
-
     fun updateScores(_sex: Int, _age: Int, _beauty: Float?) {
-        if (_beauty == null)
-            return
+        if (_beauty != null)
+            _beautyHistory.add(_beauty)
 
         if (_sexHistory.count() >= 4) {
             _sexHistory.removeAt(0)
@@ -43,7 +48,7 @@ class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
             _beautyHistory.removeAt(0)
         }
 
-        _beautyHistory.add(_beauty)
+
 
         val beautyForCalculation = _sexHistory.average()
         val ageForCalculation = _ageHistory.average()
@@ -72,6 +77,8 @@ class Neurobiology(_sex: Int, _age: Int, _beauty: Float) {
             in 25.0..35.0 -> 40
             else -> 30
         })).toInt()
+
+        Social = Random(Calendar.getInstance().time.time).nextInt(0,100)
     }
 
 

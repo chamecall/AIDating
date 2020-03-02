@@ -51,26 +51,17 @@ public class BottomPanel {
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(5);
 
-        //paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-
-
         Typeface plain = Typeface.createFromAsset(context.getAssets(), "fonts/LatoBlack.ttf");
         Typeface bold = Typeface.create(plain, Typeface.BOLD);
 
         paint.setTypeface(bold);
 
-//        textBorderPaint = new Paint();
-//        textBorderPaint.setStyle(Paint.Style.STROKE);
-//        textBorderPaint.setTextSize(TEXT_SIZE * context.getResources().getDisplayMetrics().density);
-//        textBorderPaint.setTypeface(bold);
-
-//        textBorderPaint.setStrokeWidth(2);
-//        textBorderPaint.setColor(Color.LTGRAY);
-
     }
 
     private void drawAvatarBorder() {
         paint.setStyle(Paint.Style.STROKE);
+        paint.setShadowLayer(5.0f, 10.0f, 10.0f, Color.BLACK);
+
         Canvas canvas = new Canvas(panelBitmap);
         canvas.drawRect(photoCell, paint);
         paint.setStyle(Paint.Style.FILL);
